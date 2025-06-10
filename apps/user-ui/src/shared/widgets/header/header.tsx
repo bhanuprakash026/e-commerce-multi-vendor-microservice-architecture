@@ -23,7 +23,7 @@ const Header = () => {
                     </div>
                 </div>
 
-                <div className='flex items-center gap-8'>
+                <div className='flex items-center gap-8 pb-2'>
                     <div className='flex items-center gap-2'>
                         <Link href={"/login"}><UserProfileIcon /></Link>
                         <Link href={"/login"}>
