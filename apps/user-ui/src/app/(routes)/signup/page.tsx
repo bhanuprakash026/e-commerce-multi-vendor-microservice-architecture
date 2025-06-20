@@ -95,7 +95,9 @@ const Signup = () => {
     };
 
     const resendOTP = () => {
-
+        if(userData) {
+            signupMutation.mutate(userData);
+        }
     }
 
     return (
