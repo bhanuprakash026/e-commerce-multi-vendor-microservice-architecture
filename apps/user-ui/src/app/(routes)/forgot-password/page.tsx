@@ -134,7 +134,7 @@ const ForgotPassword = () => {
 
 
   return (
-    <div className="w-full py-10 min-h-[85vh] bg-[#f1f1f1">
+    <div className="w-full py-10 min-h-[85vh] bg-[#f1f1f1]">
       <h1 className="text-4xl font-Poppins font-semibold text-black text-center">
         Forgot Password
       </h1>

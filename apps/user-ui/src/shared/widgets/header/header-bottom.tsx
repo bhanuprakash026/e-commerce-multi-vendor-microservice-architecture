@@ -5,11 +5,14 @@ import { navItems } from '@/configs/constants';
 import { AlignLeft, ChevronDown, HeartIcon } from 'lucide-react';
 import Link from 'next/link';
 import React, { useState, useEffect } from 'react'
+import useUser from '@/hooks/useUser';
 
 const HeaderBottom = () => {
 
   const [isSticky, setIsSticky] = useState(false);
   const [show, setShow] = useState(false);
+  const { user, isLoading  } = useUser();
+
 
   // Track scroll
   useEffect(() => {
@@ -63,43 +66,57 @@ const HeaderBottom = () => {
         <div className="">
           {isSticky && (
             <div className='flex items-center gap-8 pb-2'>
-              <div className='flex items-center gap-2'>
-                <Link href={"/login"}><UserProfileIcon /></Link>
-                <Link href={"/login"}>
-                  <span className='block font-medium'>Hello,</span>
-                  <span className='font-semibold '>Sign In</span>
-                </Link>
-              </div>
+                    <div className='flex items-center gap-2'>
+                        {!isLoading && user ?
+                            (<>
+                                <Link href={"/profile"}><UserProfileIcon /></Link>
+                                <Link href={"/profile"}>
+                                    <span className='block font-medium'>Hello,</span>
+                                    <span className='font-semibold '>{user?.name}</span>
+                                </Link>
+                            </>
+                            ) : (
+                                <>
+                                    <Link href={"/login"}><UserProfileIcon /></Link>
+                                    <Link href={"/login"}>
+                                        <span className='block font-medium'>Hello,</span>
+                                        <span className='font-semibold '>{isLoading ? ". . . ." : "Sign in"}</span>
+                                    </Link>
+                                </>
+                            )}
 
-              <div className='flex items-center gap-4'>
-                <Link href={"/whishlist"} className='relative'>
-                  <HeartIcon
-                    width={28}
-                    height={28}
-                    stroke="#EF4444" // Tailwind red-500
-                    className="hover:fill-red-500 hover:stroke-red-500 transition-all"
-                  />
 
-                  <div className='w-6 h-6 border-2 border-white bg-red-500 rounded-full flex items-center justify-center absolute top-[-10px] right-[-10px]'>
-                    <span className='text-white font-medium text-sm'>0</span>
-                  </div>
-                </Link>
+                    </div>
 
-                <Link href={"/cart"} className='relative'>
-                  <AddToCartIcon
-                    width={38}
-                    height={38}
-                    stroke="#1D4ED8" // Tailwind blue-700
-                    className="hover:scale-110 transition-transform"
-                  />
+                    <div className='flex items-center gap-4'>
+                        <Link href={"/whishlist"} className='relative'>
+                            <HeartIcon
+                                width={28}
+                                height={28}
+                                stroke="#EF4444" // Tailwind red-500
+                                className="hover:fill-red-500 hover:stroke-red-500 transition-all"
+                            />
 
-                  <div className='w-6 h-6 border-2 border-white bg-red-500 rounded-full flex items-center justify-center absolute top-[-10px] right-[-10px]'>
-                    <span className='text-white font-medium text-sm'>0</span>
-                  </div>
-                </Link>
-              </div>
+                            <div className='w-6 h-6 border-2 border-white bg-red-500 rounded-full flex items-center justify-center absolute top-[-10px] right-[-10px]'>
+                                <span className='text-white font-medium text-sm'>0</span>
+                            </div>
+                        </Link>
 
-            </div>
+                        <Link href={"/cart"} className='relative'>
+                            <AddToCartIcon
+                                width={38}
+                                height={38}
+                                stroke="#1D4ED8" // Tailwind blue-700
+                                className="hover:scale-110 transition-transform"
+                            />
+
+                            <div className='w-6 h-6 border-2 border-white bg-red-500 rounded-full flex items-center justify-center absolute top-[-10px] right-[-10px]'>
+                                <span className='text-white font-medium text-sm'>0</span>
+                            </div>
+                        </Link>
+                    </div>
+
+                </div>
           )}
         </div>
       </div>

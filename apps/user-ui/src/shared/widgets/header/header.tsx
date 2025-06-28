@@ -1,3 +1,4 @@
+'use client'
 import Link from 'next/link'
 import React from 'react'
 import { Search } from "lucide-react"
@@ -5,8 +6,12 @@ import { UserProfileIcon } from '@/assests/svgs/profile-icon'
 import AddToCartIcon from '@/assests/svgs/cart-icon'
 import HeartIcon from '@/assests/svgs/heart-icon'
 import HeaderBottom from './header-bottom'
+import useUser from '@/hooks/useUser'
 
 const Header = () => {
+    const { user, isLoading } = useUser();
+    console.log(user)
+
     return (
         <div className="w-full bg-white ">
             <div className='w-[80%] py-5 m-auto flex items-center justify-between'>
@@ -25,11 +30,25 @@ const Header = () => {
 
                 <div className='flex items-center gap-8 pb-2'>
                     <div className='flex items-center gap-2'>
-                        <Link href={"/login"}><UserProfileIcon /></Link>
-                        <Link href={"/login"}>
-                            <span className='block font-medium'>Hello,</span>
-                            <span className='font-semibold '>Sign In</span>
-                        </Link>
+                        {!isLoading && user ?
+                            (<>
+                                <Link href={"/profile"}><UserProfileIcon /></Link>
+                                <Link href={"/profile"}>
+                                    <span className='block font-medium'>Hello,</span>
+                                    <span className='font-semibold '>{user?.name}</span>
+                                </Link>
+                            </>
+                            ) : (
+                                <>
+                                    <Link href={"/login"}><UserProfileIcon /></Link>
+                                    <Link href={"/login"}>
+                                        <span className='block font-medium'>Hello,</span>
+                                        <span className='font-semibold '>{isLoading ? ". . . ." : "Sign in"}</span>
+                                    </Link>
+                                </>
+                            )}
+
+
                     </div>
 
                     <div className='flex items-center gap-4'>

@@ -5,6 +5,7 @@ import redis from "../../../../packages/libs/redis";
 import { sendeMail } from "./sendMail";
 import { NextFunction, Request, Response } from "express";
 import prisma from "../../../../packages/libs/prisma";
+import bcrypt from "bcryptjs";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -30,7 +31,7 @@ export const checkOtpRestrictions = async (email: string, next: NextFunction) =>
     };
 
     if (await redis.get(`otp_cooldown:${email}`)) {
-        return next(new ValidationError("Please waut 1 minute before requesting a new OTP!"))
+        return next(new ValidationError("Please wait 1 minute before requesting a new OTP!"))
     };
 };
 
@@ -82,13 +83,13 @@ export const handleForgotPassword = async (req: Request, res: Response, next: Ne
 
         if (!email) throw new ValidationError("Email is Required!");
 
-        const user = userType === "user" && await prisma.users.findUnique({ where: { email } });
+        const user = userType === "user" ? await prisma.users.findUnique({ where: { email } }) : await prisma.sellers.findUnique({ where: { email } });
         if (!user) throw new ValidationError(`${userType} is not found!`);
 
         await checkOtpRestrictions(email, next);
         await trackOtpRequests(email, next);
 
-        await sendOtp(user.name, email, "forgot-password-user-mail");
+        await sendOtp(user.name, email, userType === "user" ? "forgot-password-user-mail" : "forgot-password-seller-mail");
 
         res.json(200).json({
             message: "OTP sent to email. Please verify your account."
@@ -102,11 +103,78 @@ export const verifyForgotPassword = async (req: Request, res: Response, next: Ne
     try {
         const { email, otp } = req.body;
 
-        if(!email || !otp) throw new ValidationError("Email and OTP are Required!");
+        if (!email || !otp) throw new ValidationError("Email and OTP are Required!");
         await verifyOtp(email, otp, next);
 
-        res.status(200).json({message: "OTP Verified. You can now reset your password."});
+        res.status(200).json({ message: "OTP Verified. You can now reset your password." });
     } catch (error) {
-        
+
     }
 };
+
+// verify seller with OTP
+export const verifySeller = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { email, otp, password, name, country, phone_number } = req.body;
+        if (!email || !otp || !password || !name || !country || !phone_number) {
+            return next(new ValidationError("All Fields are Required"));
+        };
+
+        const existingSeller = await prisma.sellers.findFirst({ where: { email } });
+        if (existingSeller) {
+            new ValidationError("Seller already exist with this email!");
+        };
+
+        await verifyOtp(email, otp, next);
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const seller = await prisma.sellers.create({
+            data: {
+                name,
+                email,
+                password: hashedPassword,
+                phone_number,
+                country
+            },
+        });
+
+        res
+            .status(201)
+            .json({ seller, message: "Seller Registered successfully!" });
+
+    } catch (error) {
+        next(error);
+    }
+};
+
+// create a seller shop.
+export const createShop = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { name, bio, address, opening_hours, website, category, sellerId } = req.body;
+
+        if (!name || !bio || !address || !opening_hours || !website || !category || !sellerId) {
+            return next(new ValidationError("All Fields are Required!"));
+        };
+
+        const shopData: any = {
+            name, bio, address, opening_hours, category, sellerId
+        };
+
+        if(website && website.trim() !== "") {
+            shopData.website = website;
+        };
+
+        const shop = await prisma.shops.create({
+            data: shopData,
+        });
+
+        res
+            .status(201)
+            .json({ success: true, shop });
+
+    } catch (error) {
+        next(error);
+    };
+};
+
+// Create stripe connect account link
