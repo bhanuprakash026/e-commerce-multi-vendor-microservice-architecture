@@ -5,14 +5,12 @@ import prisma from "../libs/prisma";
 const isAuthenticated = async (req: any, res: Response, next: NextFunction) => {
     try {
         const token = req.cookies["access_token"] || req.cookies["seller-access-token"] || req.headers.authorization?.split(" ")[1];
-        console.log("token:--", token);
         if (!token) {
             return res.status(401).json({ message: "Unauthorized! Token missing." });
         };
 
         // verifyToken
         const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string) as { id: string, role: "user" | "seller" };
-        console.log("decoded:--", decoded);
         if (!decoded) {
             return res.status(401).json({ message: "Unauthorized! Invalid Token" });
         };
@@ -33,12 +31,10 @@ const isAuthenticated = async (req: any, res: Response, next: NextFunction) => {
 
         req.role = decoded.role;
 
-        console.log("account", account)
 
         return next();
 
     } catch (error) {
-        console.log("cookies", req)
         return res.status(401)
             .json({ message: "Unauthorized! Token expired or Invalid." });
     }
