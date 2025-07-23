@@ -2,20 +2,21 @@ import React, { forwardRef } from "react";
 
 interface BaseProps {
     label?: string;
-    type?: "text" | "number" | "password" | "email" | "email" | "textarea"
+    type?: "text" | "number" | "password" | "email" | "textarea";
 }
 
-type InputProps = BaseProps & React.InputHTMLAttributes<HTMLInputElement>;
+type InputProps = BaseProps & React.InputHTMLAttributes<HTMLInputElement> & {
+    type?: "text" | "number" | "password" | "email";
+};
 
-type TextareaProps = BaseProps & React.InputHTMLAttributes<HTMLTextAreaElement>;
-
+type TextareaProps = BaseProps & React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
+    type: "textarea";
+};
 
 type Props = InputProps | TextareaProps;
 
-
 const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, Props>(
-    ({
-        label, type = "text", className, ...props }, ref) => {
+    ({ label, type = "text", className, ...props }, ref) => {
         return (
             <div className="w-full">
                 {label && (
@@ -28,23 +29,21 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, Props>(
                     <textarea
                         ref={ref as React.Ref<HTMLTextAreaElement>}
                         className={`w-full border outline-none border-gray-700 bg-transparent p-2 rounded-md text-white ${className}`}
-                        {... (props as TextareaProps)}
+                        {...(props as TextareaProps)}
                     />
                 ) : (
                     <input
                         type={type}
                         ref={ref as React.Ref<HTMLInputElement>}
                         className={`w-full border outline-none border-gray-700 bg-transparent p-2 rounded-md text-white ${className}`}
-                        {... (props as InputProps)}
+                        {...(props as InputProps)}
                     />
                 )}
-
             </div>
-        )
-
+        );
     }
 );
 
-Input.displayName = "Input"
+Input.displayName = "Input";
 
 export default Input;

@@ -11,6 +11,7 @@ import axios from 'axios';
 import cookieParser from 'cookie-parser';
 import express from 'express';
 import * as path from 'path';
+import initializeSiteConfig from './libs/initializeSiteConfig';
 
 const app = express();
 app.use(
@@ -43,10 +44,19 @@ app.get('/getway-health', (req, res) => {
   res.send({ message: 'Welcome to api-getway!' });
 });
 
-app.use("/", proxy("http://localhost:6001"))
+app.use("/product", proxy("http://localhost:6002"))
+app.use("/", proxy("http://localhost:6001"));
+
+
 
 const port = process.env.PORT || 8080;
 const server = app.listen(port, () => {
   console.log(`Listening at http://localhost:${port}/api`);
+  try {
+    initializeSiteConfig();
+    console.log("Site Config Initialzed successfully!")
+  } catch (error) {
+    console.log("Failed to initialze site config: ", error)
+  }
 });
 server.on('error', console.error);
