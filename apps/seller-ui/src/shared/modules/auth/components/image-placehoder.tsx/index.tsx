@@ -3,15 +3,18 @@ import Image from 'next/image';
 import React, { useState } from 'react'
 
 const ImagePlaceHolder = ({
-    size, small, onImageChange, onRemove, defaultImage = null, index = null, setOpenImageModal,
+    size, small, onImageChange, setSelectedImage, onRemove, defaultImage = null, index = null, setOpenImageModal, images, pictureUploadingLoader
 }: {
     size: string;
     small?: boolean;
     onImageChange: (file: File | null, index: number) => void;
+    setSelectedImage: (e: string) => void
     onRemove: (index: number) => void;
     defaultImage?: string | null;
     setOpenImageModal: (openImageModal: boolean) => void;
     index?: any;
+    images: any;
+    pictureUploadingLoader: boolean;
 }) => {
     const [imagePreview, setImagePreview] = useState<string | null>(defaultImage);
 
@@ -34,14 +37,18 @@ const ImagePlaceHolder = ({
             />
             {imagePreview ? (
                 <>
-                    <button type="button" onClick={() => onRemove?.(index!)}
+                    <button type="button" disabled={pictureUploadingLoader} onClick={() => onRemove?.(index!)}
                         className="absolute top-3 right-3 p-2 !rounded bg-red-600 shadow-lg"
                     >
                         <X size={16} />
                     </button>
                     <button
+                        disabled={pictureUploadingLoader}
                         className='absolute top-3 right-[70px] p-2 !rounded bg-blue-500 shadow-lg cursor-pointer'
-                        onClick={() => setOpenImageModal(true)}
+                        onClick={() =>{
+                            setOpenImageModal(true);
+                            setSelectedImage(images[index].file_url)
+                        }}
                     >
                         <WandSparkles size={16} />
                     </button>
@@ -62,7 +69,7 @@ const ImagePlaceHolder = ({
                 />) : (
                 <>
                     <p className={`text-gray-400 ${small ? "text-xl" : "text-4xl"} font-semibold`}>{size}</p>
-                    <p className={`text-gray-500 ${small ? "text-sm" : "text-lg"} p-2 text-center`}>Please choose an image <br /> according to the expected ratio</p>
+                    <p className={`text-gray-500 ${small ? "text-sm" : "text-lg"} p-2 text-center`}>Please choose an image <br /> according to the expected ratio and limit below 100KB</p>
                 </>
             )}
         </div>
