@@ -187,7 +187,7 @@ export const createProduct = async (req: any, res: Response, next: NextFunction)
       sale_price,
       regular_price,
       subCategory,
-      customProperties = {},
+      custom_properties,
       images = [],
     } = req.body;
 
@@ -241,7 +241,7 @@ export const createProduct = async (req: any, res: Response, next: NextFunction)
         stock: parseInt(stock),
         sale_price: parseInt(sale_price),
         regular_price: parseInt(regular_price),
-        custom_properties: customProperties || {},
+        custom_properties: custom_properties || {},
         custom_specifications: custom_specifications || {},
         images: {
           connectOrCreate: Array.isArray(images)

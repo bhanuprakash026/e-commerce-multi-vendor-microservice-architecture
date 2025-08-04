@@ -14,9 +14,9 @@ const CustomProperties = ({ control, errors }: any) => {
         <Controller
           name="custom_properties"
           control={control}
-          render={({ field: { onChange } }) => {
+          render={({ field }) => {
             useEffect(() => {
-              onChange(properties);
+              field.onChange(properties);
             }, [properties]);
 
             const addProperty = () => {
@@ -27,9 +27,9 @@ const CustomProperties = ({ control, errors }: any) => {
 
             const addValue = (index: number) => {
               if (!newValue.trim()) return;
-              const updated = [...properties];
-              updated[index].value.push(newValue);
-              setProperties(updated);
+              const updatedProperties = [...properties];
+              updatedProperties[index].value.push(newValue);
+              setProperties(updatedProperties);
               setNewValue("");
             };
 
