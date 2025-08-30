@@ -230,7 +230,7 @@ export const createProduct = async (req: any, res: Response, next: NextFunction)
         cashOnDelivery: cash_on_delivery,
         slug,
         shopId: req.seller?.shop?.id!,
-        tags,
+        tags: tags.split(","),
         brand,
         video_url,
         category,
@@ -244,23 +244,14 @@ export const createProduct = async (req: any, res: Response, next: NextFunction)
         custom_properties: custom_properties || {},
         custom_specifications: custom_specifications || {},
         images: {
-          connectOrCreate: Array.isArray(images)
-            ? images
-              .filter((img: any) => img && typeof img.fileId === "string" && typeof img.file_url === "string" && typeof img.userId === "string")
-              .map((img: any) => ({
-                where: {
-                  userId: img.userId, // 🔁 must be unique in your Prisma schema
-                },
-                create: {
-                  file_id: img.fileId,
-                  url: img.file_url,
-                  userId: img.userId,
-                },
-              }))
-            : [],
+          create: images
+            .filter((img: any) => img && img.fileId && img.file_url)
+            .map((img: any) => ({
+              file_id: img.fileId,
+              url: img.file_url
+
+            })),
         }
-
-
       },
       include: { images: true },
     });
@@ -272,5 +263,105 @@ export const createProduct = async (req: any, res: Response, next: NextFunction)
 
   } catch (error) {
     return next(error)
+  }
+}
+
+// get logged in seller products
+export const getShopProducts = async (req: any, res: Response, next: NextFunction) => {
+  try {
+    const products = await prisma.products.findMany({
+      where: {
+        shopId: req?.seller?.shop?.id,
+      },
+      include: {
+        images: true,
+      }
+    });
+
+    res.status(201).json({
+      success: true,
+      products
+    });
+  } catch (error) {
+    return next(error)
+  }
+}
+
+// delete Product
+export const deleteProduct = async(req: any, res: Response, next: NextFunction) => {
+  try {
+    const { productId } = req.params;
+    const sellerId = req?.seller?.shop?.id;
+
+    const product = await prisma.products.findUnique({
+      where: {id: productId},
+      select: {id: true, shopId: true, isDeleted: true}
+    });
+
+    if(!product) {
+      return next(new ValidationError("Product not found"));
+    }
+
+    if(product.shopId !== sellerId) {
+      return next(new ValidationError("Unauthorized action"));
+    }
+
+    if(product.isDeleted) {
+      return next(new ValidationError("Product is already deleted"))
+    }
+
+    const deletedProduct = await prisma.products.update({
+      where: {id: productId},
+      data: {
+        isDeleted: true,
+        deletedAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
+      }
+    });
+
+    return res.status(200).json({
+      message: 
+      "Product is scheduled for deletion in 24 Hours. You can restore it within this 24 Hours",
+      deletedAt: deletedProduct?.deletedAt
+    })
+  } catch (error) {
+    return next(error)
+  }
+}
+
+// Restore Deleted Product with in 24 Hrs
+export const restoreProduct = async(req: any, res: Response, next:NextFunction)=> {
+  try {
+    const { productId } = req.params;
+    const sellerId = req.seller?.shop?.id;
+
+    const product = await prisma.products.findUnique({
+      where: {id: productId},
+      select: {id: true, shopId: true, isDeleted: true}
+    });
+
+    if(!product) {
+      return next(new ValidationError("Product is not found"));
+    }
+
+    if(product.shopId !== sellerId) {
+      return next(new ValidationError("Unauthorized Action"))
+    }
+
+    if(!product.isDeleted) {
+      return res
+      .status(400)
+      .json({message: "Product is not in deleted state"});
+    }
+
+    await prisma.products.update({
+      where: {id: productId},
+      data: {isDeleted: false, deletedAt: null}
+    });
+
+    return res.status(200).json({message: "Product Successfully restored!"});
+
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({message: "Error retoring Product!", error});
   }
 }

@@ -10,5 +10,8 @@
 
 import Redis from "ioredis";
 
-const redis = new Redis("rediss://default:AbWOAAIjcDEwYjY3OTA3Y2FhOGI0YzM5ODJlMzcyODc2NWExOTE1YXAxMA@daring-rhino-46478.upstash.io:6379");
+const redis = new Redis(process.env.REDIS_URL!, {
+  tls: {},
+});
 export default redis;
+
