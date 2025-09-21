@@ -13,6 +13,9 @@ const nextConfig = {
     // See: https://github.com/gregberge/svgr
     svgr: false,
   },
+  images: {
+    domains: ["t4.ftcdn.net"], // ✅ Add this domain
+  },
 };
 
 const plugins = [

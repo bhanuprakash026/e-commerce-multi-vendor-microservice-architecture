@@ -4,6 +4,7 @@
 
 import { Request, Response, NextFunction } from "express";
 import prisma from "@packages/libs/prisma";
+import { Prisma } from "@prisma/client";
 import { imagekit } from "@packages/libs/imagekit";
 import { AuthError, NotFoundError, ValidationError } from "@packages/error-handler";
 
@@ -288,30 +289,30 @@ export const getShopProducts = async (req: any, res: Response, next: NextFunctio
 }
 
 // delete Product
-export const deleteProduct = async(req: any, res: Response, next: NextFunction) => {
+export const deleteProduct = async (req: any, res: Response, next: NextFunction) => {
   try {
     const { productId } = req.params;
     const sellerId = req?.seller?.shop?.id;
 
     const product = await prisma.products.findUnique({
-      where: {id: productId},
-      select: {id: true, shopId: true, isDeleted: true}
+      where: { id: productId },
+      select: { id: true, shopId: true, isDeleted: true }
     });
 
-    if(!product) {
+    if (!product) {
       return next(new ValidationError("Product not found"));
     }
 
-    if(product.shopId !== sellerId) {
+    if (product.shopId !== sellerId) {
       return next(new ValidationError("Unauthorized action"));
     }
 
-    if(product.isDeleted) {
+    if (product.isDeleted) {
       return next(new ValidationError("Product is already deleted"))
     }
 
     const deletedProduct = await prisma.products.update({
-      where: {id: productId},
+      where: { id: productId },
       data: {
         isDeleted: true,
         deletedAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
@@ -319,8 +320,8 @@ export const deleteProduct = async(req: any, res: Response, next: NextFunction) 
     });
 
     return res.status(200).json({
-      message: 
-      "Product is scheduled for deletion in 24 Hours. You can restore it within this 24 Hours",
+      message:
+        "Product is scheduled for deletion in 24 Hours. You can restore it within this 24 Hours",
       deletedAt: deletedProduct?.deletedAt
     })
   } catch (error) {
@@ -329,39 +330,90 @@ export const deleteProduct = async(req: any, res: Response, next: NextFunction) 
 }
 
 // Restore Deleted Product with in 24 Hrs
-export const restoreProduct = async(req: any, res: Response, next:NextFunction)=> {
+export const restoreProduct = async (req: any, res: Response, next: NextFunction) => {
   try {
     const { productId } = req.params;
     const sellerId = req.seller?.shop?.id;
 
     const product = await prisma.products.findUnique({
-      where: {id: productId},
-      select: {id: true, shopId: true, isDeleted: true}
+      where: { id: productId },
+      select: { id: true, shopId: true, isDeleted: true }
     });
 
-    if(!product) {
+    if (!product) {
       return next(new ValidationError("Product is not found"));
     }
 
-    if(product.shopId !== sellerId) {
+    if (product.shopId !== sellerId) {
       return next(new ValidationError("Unauthorized Action"))
     }
 
-    if(!product.isDeleted) {
+    if (!product.isDeleted) {
       return res
-      .status(400)
-      .json({message: "Product is not in deleted state"});
+        .status(400)
+        .json({ message: "Product is not in deleted state" });
     }
 
     await prisma.products.update({
-      where: {id: productId},
-      data: {isDeleted: false, deletedAt: null}
+      where: { id: productId },
+      data: { isDeleted: false, deletedAt: null }
     });
 
-    return res.status(200).json({message: "Product Successfully restored!"});
+    return res.status(200).json({ message: "Product Successfully restored!" });
 
   } catch (error) {
     console.log(error)
-    return res.status(500).json({message: "Error retoring Product!", error});
+    return res.status(500).json({ message: "Error retoring Product!", error });
   }
 }
+
+// get all Products
+export const getAllProducts = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const skip = (page - 1) * limit;
+    const type = req.query.type;
+
+    const orderBy: Prisma.productsOrderByWithRelationInput =
+      type === "latest"
+        ? { createdAt: "desc" }
+        : { totalSales: "desc" };
+
+    const [products, total, top10Products] = await Promise.all([
+      prisma.products.findMany({
+        skip,
+        take: limit,
+        include: {
+          images: true,
+          Shop: true,
+        },
+        // where: baseFilter,
+        orderBy, // use the same order as top10
+      }),
+
+      prisma.products.count(),
+
+      prisma.products.findMany({
+        take: 10,
+        // where: baseFilter,
+        orderBy,
+      }),
+    ]);
+
+    res.status(200).json({
+      products,
+      top10By: type === "latest" ? "latest" : "topSales",
+      top10Products,
+      total,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+    });
+  } catch (error) {
+    next(error);
+  }
+};

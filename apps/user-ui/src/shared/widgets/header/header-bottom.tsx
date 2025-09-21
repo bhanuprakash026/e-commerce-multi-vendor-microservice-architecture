@@ -11,7 +11,7 @@ const HeaderBottom = () => {
 
   const [isSticky, setIsSticky] = useState(false);
   const [show, setShow] = useState(false);
-  const { user, isLoading  } = useUser();
+  const { user, isLoading } = useUser();
 
 
   // Track scroll
@@ -45,7 +45,7 @@ const HeaderBottom = () => {
 
         {/* Dropdown menu */}
         {show && (
-          <div className={`absolute left-0 ${isSticky ? "top-[70px]" : "top-[50px]"} w-[260px] h-[400px] bg-[#f5f5f5]`}>
+          <div className={`z-50 absolute left-0 ${isSticky ? "top-[70px]" : "top-[50px]"} w-[260px] h-[400px] bg-[#f5f5f5]`}>
 
           </div>
         )}
@@ -66,57 +66,57 @@ const HeaderBottom = () => {
         <div className="">
           {isSticky && (
             <div className='flex items-center gap-8 pb-2'>
-                    <div className='flex items-center gap-2'>
-                        {!isLoading && user ?
-                            (<>
-                                <Link href={"/profile"}><UserProfileIcon /></Link>
-                                <Link href={"/profile"}>
-                                    <span className='block font-medium'>Hello,</span>
-                                    <span className='font-semibold '>{user?.name}</span>
-                                </Link>
-                            </>
-                            ) : (
-                                <>
-                                    <Link href={"/login"}><UserProfileIcon /></Link>
-                                    <Link href={"/login"}>
-                                        <span className='block font-medium'>Hello,</span>
-                                        <span className='font-semibold '>{isLoading ? ". . . ." : "Sign in"}</span>
-                                    </Link>
-                                </>
-                            )}
+              <div className='flex items-center gap-2'>
+                {!isLoading && user ?
+                  (<>
+                    <Link href={"/profile"}><UserProfileIcon /></Link>
+                    <Link href={"/profile"}>
+                      <span className='block font-medium'>Hello,</span>
+                      <span className='font-semibold '>{user?.name}</span>
+                    </Link>
+                  </>
+                  ) : (
+                    <>
+                      <Link href={"/login"}><UserProfileIcon /></Link>
+                      <Link href={"/login"}>
+                        <span className='block font-medium'>Hello,</span>
+                        <span className='font-semibold '>{isLoading ? ". . . ." : "Sign in"}</span>
+                      </Link>
+                    </>
+                  )}
 
 
-                    </div>
+              </div>
 
-                    <div className='flex items-center gap-4'>
-                        <Link href={"/whishlist"} className='relative'>
-                            <HeartIcon
-                                width={28}
-                                height={28}
-                                stroke="#EF4444" // Tailwind red-500
-                                className="hover:fill-red-500 hover:stroke-red-500 transition-all"
-                            />
+              <div className='flex items-center gap-4'>
+                <Link href={"/whishlist"} className='relative'>
+                  <HeartIcon
+                    width={28}
+                    height={28}
+                    stroke="#EF4444" // Tailwind red-500
+                    className="hover:fill-red-500 hover:stroke-red-500 transition-all"
+                  />
 
-                            <div className='w-6 h-6 border-2 border-white bg-red-500 rounded-full flex items-center justify-center absolute top-[-10px] right-[-10px]'>
-                                <span className='text-white font-medium text-sm'>0</span>
-                            </div>
-                        </Link>
+                  <div className='w-6 h-6 border-2 border-white bg-red-500 rounded-full flex items-center justify-center absolute top-[-10px] right-[-10px]'>
+                    <span className='text-white font-medium text-sm'>0</span>
+                  </div>
+                </Link>
 
-                        <Link href={"/cart"} className='relative'>
-                            <AddToCartIcon
-                                width={38}
-                                height={38}
-                                stroke="#1D4ED8" // Tailwind blue-700
-                                className="hover:scale-110 transition-transform"
-                            />
+                <Link href={"/cart"} className='relative'>
+                  <AddToCartIcon
+                    width={38}
+                    height={38}
+                    stroke="#1D4ED8" // Tailwind blue-700
+                    className="hover:scale-110 transition-transform"
+                  />
 
-                            <div className='w-6 h-6 border-2 border-white bg-red-500 rounded-full flex items-center justify-center absolute top-[-10px] right-[-10px]'>
-                                <span className='text-white font-medium text-sm'>0</span>
-                            </div>
-                        </Link>
-                    </div>
+                  <div className='w-6 h-6 border-2 border-white bg-red-500 rounded-full flex items-center justify-center absolute top-[-10px] right-[-10px]'>
+                    <span className='text-white font-medium text-sm'>0</span>
+                  </div>
+                </Link>
+              </div>
 
-                </div>
+            </div>
           )}
         </div>
       </div>
