@@ -2,9 +2,11 @@ import Link from 'next/link';
 import React, { useEffect, useState } from 'react'
 import Ratings from '../ratings';
 import { Eye, Heart, ShoppingBag } from 'lucide-react';
+import ProductDetailsCard from './product-details.card';
 
 const ProductCard = ({ product, isEvent }: { product: any; isEvent?: boolean }) => {
 	const [timeLeft, setTimeLeft] = useState("");
+  const [open, setOpen] = useState(false);
 
 	useEffect(() => {
 		if (isEvent && product?.ending_date) {
@@ -27,8 +29,10 @@ const ProductCard = ({ product, isEvent }: { product: any; isEvent?: boolean }) 
 			return () => clearInterval(interval);
 		}
 
-	})
+		return undefined;
+	}, []);
 
+  console.log(product)
 	return (
 		<div className='w-full min-w-350px bg-white rounded-lg relative mb-10'>
 			{product.isEvent && (
@@ -45,7 +49,7 @@ const ProductCard = ({ product, isEvent }: { product: any; isEvent?: boolean }) 
 
 			<Link href={`/product/${product?.slug}`}>
 				<img
-					src={"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRIHulS9VNefwqV9UmnCCo7bpVtScuwDFlBDQ&s"}
+					src={product?.images[0]?.url}
 					width={300}
 					height={300}
 					className='w-full h-[200px] object-cover mx-auto rounded-t-md'
@@ -100,6 +104,7 @@ const ProductCard = ({ product, isEvent }: { product: any; isEvent?: boolean }) 
 					<Eye
 						className='cursor-pointer text-[#4b5563] hover:scale-110 transition'
 						size={22}
+            onClick={() => setOpen(!open)}
 					/>
 				</div>
 
@@ -110,7 +115,9 @@ const ProductCard = ({ product, isEvent }: { product: any; isEvent?: boolean }) 
 					/>
 				</div>
 			</div>
-
+			{open && (
+        <ProductDetailsCard data={product} setOpen={setOpen}/>
+      )}
 		</div>
 	)
 }

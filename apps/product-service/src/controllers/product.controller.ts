@@ -390,7 +390,11 @@ export const getAllProducts = async (
         take: limit,
         include: {
           images: true,
-          Shop: true,
+          Shop: {
+            include: {
+              avatar: true
+            }
+          },
         },
         // where: baseFilter,
         orderBy, // use the same order as top10
@@ -402,6 +406,14 @@ export const getAllProducts = async (
         take: 10,
         // where: baseFilter,
         orderBy,
+        include: {
+          images: true,
+          Shop: {
+            include: {
+              avatar: true
+            }
+          }
+        }
       }),
     ]);
 
