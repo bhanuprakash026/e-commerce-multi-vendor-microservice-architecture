@@ -3,12 +3,21 @@ import Image from 'next/image'
 import Link from 'next/link'
 import React, { useState } from 'react'
 import Ratings from '../ratings'
-import { MapPin, X } from 'lucide-react'
+import { Heart, MapPin, ShoppingCart, X } from 'lucide-react'
 import { useRouter } from 'next/navigation';
 
 const ProductDetailsCard = ({ data, setOpen, }: { data: any, setOpen: (open: boolean) => void }) => {
   const [activeImage, setActiveImage] = useState(0);
+  const [isSelected, setIsSelected] = useState(data?.colors?.[0] || "");
+  const [isSizeSelected, setSizeSelected] = useState(data?.sizes?.[0] || "");
+  const [quantity, setQuantity] = useState(1);
+
   const router = useRouter();
+
+  const estimatedDelivery = new Date();
+  estimatedDelivery.setDate(estimatedDelivery.getDate() + 5);
+
+  console.log("data:--", data);
   return (
     <div
       className='fixed inset-0 flex items-center justify-center bg-[#0000001d] z-[100]'
@@ -35,7 +44,7 @@ const ProductDetailsCard = ({ data, setOpen, }: { data: any, setOpen: (open: boo
                   className={`cursor-pointer border rounded-md ${activeImage === index ? "border-gray-500 p-1" : "border-transparent"}`}
                   onClick={() => setActiveImage(index)}
                 >
-                  <Image 
+                  <Image
                     src={image?.url}
                     alt={`Thumbnail ${index}`}
                     width={80}
@@ -66,12 +75,12 @@ const ProductDetailsCard = ({ data, setOpen, }: { data: any, setOpen: (open: boo
                     {data?.Shop?.name}
                   </Link>
                   <span className='blcok mt-1'>
-                    <Ratings rating={data?.Shop?.rating || 2.5}/>
+                    <Ratings rating={data?.Shop?.rating || 2.5} />
                   </span>
 
                   { /* Shop Location */}
                   <p className='text-gray-600 mt-1 flex items-center gap-2'>
-                    <MapPin size={20}/> {" "}
+                    <MapPin size={20} /> {" "}
                     {data?.Shop?.address || "Location not available"}
                   </p>
                 </div>
@@ -86,7 +95,7 @@ const ProductDetailsCard = ({ data, setOpen, }: { data: any, setOpen: (open: boo
               </button>
 
               <button className='w-full absolute cursor-pointer right-[-5px] top-[-5px] flex justify-end my-2 mt-[-10px]'>
-                <X  size={25} onClick={() => setOpen(false)}/>
+                <X size={25} onClick={() => setOpen(false)} />
               </button>
             </div>
 
@@ -100,7 +109,82 @@ const ProductDetailsCard = ({ data, setOpen, }: { data: any, setOpen: (open: boo
                 <strong>Brand:</strong> {data.brand}
               </p>
             )}
+            { /* Color & Size Selection */}
+            <div className="flex flex-col md:flex-row items-start gap-5 mt-4">
+              <div>
+                { /* Colors Options */}
+                {data?.colors?.length > 0 && (
+                  <div>
+                    <strong>Color:</strong>
+                    <div className='flex gap-2 mt-1'>
+                      {data.colors.map((color: string, index: number) => (
+                        <button
+                          key={index}
+                          className={`w-8 h-8 cursor-pointer rounded-full border-2 transition ${isSelected === color ? "border-gray-400 scale-110 shadow-md" : "border-transparent"}`}
+                          onClick={() => setIsSelected(color)}
+                          style={{ backgroundColor: color }}
+                        >
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
+                { /* Size Options */}
+                {data?.sizes.length > 0 && (
+                  <div>
+                    <strong>Size:</strong>
+                    <div className='flex gap-2 mt-1'>
+                      {data.sizes.map((size: string, index: number) => (
+                        <button
+                          key={index}
+                          className={`px-4 py-1 cursor-pointer rounded-md transition-all ${isSizeSelected === size ? "bg-gray-800 text-white" : "bg-gray-300 text-black"}`}
+                          onClick={() => setSizeSelected(size)}
+                        >
+                          {size}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                { /* Price Section */}
+                <div className="mt-5 flex items-center gap-4">
+                  <h3 className='text-2xl font-semibold text-gray-900'>
+                    ${data?.sale_price}
+                  </h3>
+                  {data?.regular_price && (
+                    <h3 className='text-lg text-red-600 line-through'>{data?.regular_price}</h3>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="mt-5 flex items-center gap-5">
+              <div>
+                <button className='px-3 cursor-pointer py-1 bg-gray-300 hover:bg-gray-400 text-black' onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}>-</button>
+                <span className='px-4 bg-gray-100 py-1'>{quantity}</span>
+                <button className='px-3 cursor-pointer py-1 bg-gray-300 hover:bg-gray-400 text-black' onClick={() => setQuantity((prev) => Math.max(1, prev + 1))}>+</button>
+              </div>
+              <button className={`flex items-center gap-2 px-4 py-2 bg-[#ff5722] hover:bg-[#e64a19] my-6 text-white font-medium rounded-lg transition`}>
+                <ShoppingCart size={18} /> {" "} Add to Cart
+              </button>
+              <button className='opacity-[.7] cursor-pointer'>
+                <Heart size={30} fill='red' color='transparent ' />
+              </button>
+            </div>
+
+            <div>
+              {data.stock > 0 ? (
+                <span className='text-green-600 font-semibold'>In Stocks</span>
+              ) : (
+                <span className='text-red-600 font-semibold'>Out of Stock</span>
+              )}
+            </div>
+
+            <div className="mt-3 text-gray-600 text-sm">
+              Estimated Delivery : {" "}
+              <strong>{estimatedDelivery.toDateString()}</strong>
+            </div>
           </div>
         </div>
       </div>

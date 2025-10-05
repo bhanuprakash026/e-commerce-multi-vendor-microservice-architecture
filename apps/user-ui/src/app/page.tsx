@@ -32,7 +32,7 @@ const Page = () => {
   return (
     <div className='bg-[#f5f5f5]'>
       <Hero />
-      <div className="md:w-[80%] w-[90%] my-10 m-auto">
+      <div className="md:w-[80%] w-[90%] mt-10 m-auto">
         <div className='mb-8'>
           <SectionTitle
             title="Suggested Products"
@@ -52,7 +52,7 @@ const Page = () => {
         )}
 
         {!isLoading && !isError && (
-          <div className='m-auto grid grid-cols-1 sm:grid-cols-3 md:grid-cols-5'>
+          <div className='m-auto grid grid-cols-1 sm:grid-cols-3 md:grid-cols-5 gap-5'>
             {products?.map((product: any) => (
               <ProductCard key={product.id} product={product} />
             ))}
