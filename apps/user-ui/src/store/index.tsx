@@ -88,7 +88,7 @@ export const useStore = create<Store>()(
 
       // remove from wishlist
       removeFormWishlist: (id, user, location, deviceInfo) => {
-        const removedProduct = get().wishlist.find((item) => )
+        const removedProduct = get().wishlist.find((item) => item.id === id);
         set((state) => ({
           wishlist: state.wishlist?.filter((item) => item.id !== id)
         }));
