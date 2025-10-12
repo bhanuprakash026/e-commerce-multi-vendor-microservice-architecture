@@ -6,7 +6,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm } from 'react-hook-form';
 
 type FormData = {
   email: string;
@@ -18,21 +18,20 @@ const Login = () => {
   const [serverError, setServerError] = useState<string | null>(null);
   const [remeberMe, setRememberMe] = useState(false);
   const router = useRouter();
-
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>();
 
   const loginMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URI}/api/login-user`, data, {withCredentials: true});
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URI}/api/login-user`, data, { withCredentials: true });
       return response.data;
     },
-    onSuccess: (data ) => {
+    onSuccess: (data) => {
       setServerError(null);
       router.push("/");
     },
 
     onError: (error: AxiosError) => {
-      const errorMessage = (error.response?.data as {message?: string})?.message || "Invalid Credentials!";
+      const errorMessage = (error.response?.data as { message?: string })?.message || "Invalid Credentials!";
       setServerError(errorMessage);
     }
   });
@@ -131,7 +130,7 @@ const Login = () => {
               disabled={loginMutation.isPending}
               className='w-full text-lg cursor-pointer bg-pointer bg-black text-white py-2 rounded-lg'
             >
-              {loginMutation.isPending ? "Login in ...": "Login"}
+              {loginMutation.isPending ? "Login in ..." : "Login"}
             </button>
             {serverError && (
               <p className="text-red-500 text-sm">{serverError}</p>

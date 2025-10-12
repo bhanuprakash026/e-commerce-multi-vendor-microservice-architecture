@@ -6,12 +6,15 @@ import { AlignLeft, ChevronDown, HeartIcon } from 'lucide-react';
 import Link from 'next/link';
 import React, { useState, useEffect } from 'react'
 import useUser from '@/hooks/useUser';
+import { useStore } from '@/store';
 
 const HeaderBottom = () => {
 
   const [isSticky, setIsSticky] = useState(false);
   const [show, setShow] = useState(false);
   const { user, isLoading } = useUser();
+  const cart = useStore((state: any) => state.cart);
+  const wishlist = useStore((state: any) => state.wishlist);
 
 
   // Track scroll
@@ -98,7 +101,7 @@ const HeaderBottom = () => {
                   />
 
                   <div className='w-6 h-6 border-2 border-white bg-red-500 rounded-full flex items-center justify-center absolute top-[-10px] right-[-10px]'>
-                    <span className='text-white font-medium text-sm'>0</span>
+                    <span className='text-white font-medium text-sm'>{wishlist?.length}</span>
                   </div>
                 </Link>
 
@@ -111,7 +114,7 @@ const HeaderBottom = () => {
                   />
 
                   <div className='w-6 h-6 border-2 border-white bg-red-500 rounded-full flex items-center justify-center absolute top-[-10px] right-[-10px]'>
-                    <span className='text-white font-medium text-sm'>0</span>
+                    <span className='text-white font-medium text-sm'>{cart?.length}</span>
                   </div>
                 </Link>
               </div>

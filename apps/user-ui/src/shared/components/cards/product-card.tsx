@@ -3,10 +3,25 @@ import React, { useEffect, useState } from 'react'
 import Ratings from '../ratings';
 import { Eye, Heart, ShoppingBag } from 'lucide-react';
 import ProductDetailsCard from './product-details.card';
+import { useStore } from '@/store';
+import useUser from '@/hooks/useUser';
+import useLocationTracking from '@/hooks/useLocationTracking';
+import useDeviceTracking from '@/hooks/useDeviceTracking';
 
 const ProductCard = ({ product, isEvent }: { product: any; isEvent?: boolean }) => {
 	const [timeLeft, setTimeLeft] = useState("");
-  const [open, setOpen] = useState(false);
+	const [open, setOpen] = useState(false);
+	const { user } = useUser();
+	const location = useLocationTracking();
+	const deviceInfo = useDeviceTracking();
+	const addToCart = useStore((state: any) => state.addToCart);
+	const addToWishlist = useStore((state: any) => state.addToWishlist);
+	const removeFormWishlist = useStore((state: any) => state.removeFormWishlist);
+	const wishlist = useStore((state: any) => state.wishlist);
+	const isWishlisted = wishlist.some((item: any) => item.id === product.id);
+	const cart = useStore((state: any) => state.cart);
+	const isInCart = cart.some((item: any) => item.id === product.id);
+	const removeFromCart = useStore((state: any) => state.removeFromCart);
 
 	useEffect(() => {
 		if (isEvent && product?.ending_date) {
@@ -32,7 +47,6 @@ const ProductCard = ({ product, isEvent }: { product: any; isEvent?: boolean }) 
 		return undefined;
 	}, []);
 
-  console.log(product)
 	return (
 		<div className='w-full min-w-350px bg-white rounded-lg relative mb-10'>
 			{product.isEvent && (
@@ -96,15 +110,18 @@ const ProductCard = ({ product, isEvent }: { product: any; isEvent?: boolean }) 
 					<Heart
 						className='cursor-pointer hover:scale-110 transition'
 						size={22}
-						fill={"red"}
-						stroke='red'
+						fill={isWishlisted ? "red" : "transparent"}
+						stroke={isWishlisted ? "red" : "#4B5563"}
+						onClick={() => {
+							isWishlisted ? removeFormWishlist(product.id, user, location, deviceInfo) : addToWishlist({ ...product, quantity: 1 }, user, location, deviceInfo)
+						}}
 					/>
 				</div>
 				<div className="bg-white rounded-full p-[6px] shadow-md">
 					<Eye
 						className='cursor-pointer text-[#4b5563] hover:scale-110 transition'
 						size={22}
-            onClick={() => setOpen(!open)}
+						onClick={() => setOpen(!open)}
 					/>
 				</div>
 
@@ -112,12 +129,15 @@ const ProductCard = ({ product, isEvent }: { product: any; isEvent?: boolean }) 
 					<ShoppingBag
 						className='cursor-pointer text-[#4b5563] hover:scale-110 transition'
 						size={22}
+						onClick={() => {
+							isInCart ? removeFromCart(product.id, user, location, deviceInfo) : addToCart({ ...product, quantity: 1 }, user, location, deviceInfo)
+						}}
 					/>
 				</div>
 			</div>
 			{open && (
-        <ProductDetailsCard data={product} setOpen={setOpen}/>
-      )}
+				<ProductDetailsCard data={product} setOpen={setOpen} />
+			)}
 		</div>
 	)
 }
