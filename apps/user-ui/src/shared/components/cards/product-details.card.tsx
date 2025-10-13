@@ -33,7 +33,13 @@ const ProductDetailsCard = ({ data, setOpen, }: { data: any, setOpen: (open: boo
   const estimatedDelivery = new Date();
   estimatedDelivery.setDate(estimatedDelivery.getDate() + 5);
 
-  console.log("data:--", data);
+  const wishlistedProductQuantity = wishlist?.filter((item: any) => item.id === data.id)[0].quantity;
+  
+  React.useEffect(() => {
+    if(wishlistedProductQuantity) {
+      setQuantity(wishlistedProductQuantity)
+    }
+  }, [wishlistedProductQuantity])
   return (
     <div
       className='fixed inset-0 flex items-center justify-center bg-[#0000001d] z-[100]'

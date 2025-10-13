@@ -26,7 +26,6 @@ const useLocationTracking = () => {
 		fetch("http://ip-api.com/json/")
 			.then((res) => res.json())
 			.then((data) => {
-				console.log("data:-------", data)
 				const newLocation = {
 					country: data?.country,
 					city: data?.city,

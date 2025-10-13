@@ -70,7 +70,7 @@ const Header: React.FC = () => {
           {/* Wishlist & Cart */}
           <div className="flex items-center gap-4">
             {/* Wishlist */}
-            <Link href="/whishlist" className="relative">
+            <Link href="/wishlist" className="relative">
               <HeartIcon
                 width={28}
                 height={28}

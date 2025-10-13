@@ -92,7 +92,7 @@ const HeaderBottom = () => {
               </div>
 
               <div className='flex items-center gap-4'>
-                <Link href={"/whishlist"} className='relative'>
+                <Link href={"/wishlist"} className='relative'>
                   <HeartIcon
                     width={28}
                     height={28}
