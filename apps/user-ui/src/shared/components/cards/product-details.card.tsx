@@ -5,12 +5,28 @@ import React, { useState } from 'react'
 import Ratings from '../ratings'
 import { Heart, MapPin, ShoppingCart, X } from 'lucide-react'
 import { useRouter } from 'next/navigation';
+import useLocationTracking from '@/hooks/useLocationTracking'
+import { useStore } from '@/store'
+import useDeviceTracking from '@/hooks/useDeviceTracking'
+import useUser from '@/hooks/useUser'
 
 const ProductDetailsCard = ({ data, setOpen, }: { data: any, setOpen: (open: boolean) => void }) => {
   const [activeImage, setActiveImage] = useState(0);
   const [isSelected, setIsSelected] = useState(data?.colors?.[0] || "");
   const [isSizeSelected, setSizeSelected] = useState(data?.sizes?.[0] || "");
   const [quantity, setQuantity] = useState(1);
+
+  const location = useLocationTracking();
+  const deviceInfo = useDeviceTracking();
+  const addToCart = useStore((state: any) => state.addToCart);
+  const addToWishlist = useStore((state: any) => state.addToWishlist);
+  const removeFormWishlist = useStore((state: any) => state.removeFormWishlist);
+  const wishlist = useStore((state: any) => state.wishlist);
+  const isWishlisted = wishlist.some((item: any) => item.id === data.id);
+  const cart = useStore((state: any) => state.cart);
+  const isInCart = cart.some((item: any) => item.id === data.id);
+  const removeFromCart = useStore((state: any) => state.removeFromCart);
+  const { user } = useUser();
 
   const router = useRouter();
 
@@ -165,30 +181,55 @@ const ProductDetailsCard = ({ data, setOpen, }: { data: any, setOpen: (open: boo
                 <span className='px-4 bg-gray-100 py-1'>{quantity}</span>
                 <button className='px-3 cursor-pointer py-1 bg-gray-300 hover:bg-gray-400 text-black' onClick={() => setQuantity((prev) => Math.max(1, prev + 1))}>+</button>
               </div>
-              <button className={`flex items-center gap-2 px-4 py-2 bg-[#ff5722] hover:bg-[#e64a19] my-6 text-white font-medium rounded-lg transition`}>
+              <button
+                className={`flex items-center gap-2 px-4 py-2 bg-[#ff5722] hover:bg-[#e64a19] my-6 text-white font-medium rounded-lg transition ${isInCart ? "cursor-not-allowed" : "cursor-pointer"}`}
+                disabled={isInCart}
+                onClick={() => addToCart({
+                  ...data, quantity,
+                  selectedOptions: {
+                    color: isSelected, size: isSizeSelected
+                  },
+                  user, location, deviceInfo
+                })}
+              >
                 <ShoppingCart size={18} /> {" "} Add to Cart
               </button>
-              <button className='opacity-[.7] cursor-pointer'>
-                <Heart size={30} fill='red' color='transparent ' />
-              </button>
-            </div>
+              <button
+                className='opacity-[.7] cursor-pointer'
+                onClick={ () => isWishlisted
+                  ? removeFormWishlist(data.id, user, location, deviceInfo)
+                  : addToWishlist(
+                    {
+                      ...data,
+                      quantity,
+                      selectedOptions: {
+                        color: isSelected,
+                        size: isSizeSelected
+                      }
+                    }
+                  )
+                }
+              >
+              <Heart size={30} fill={isWishlisted ? "red": "transparent"} color={isWishlisted ? "transparent" : "black"} />
+            </button>
+          </div>
 
-            <div>
-              {data.stock > 0 ? (
-                <span className='text-green-600 font-semibold'>In Stocks</span>
-              ) : (
-                <span className='text-red-600 font-semibold'>Out of Stock</span>
-              )}
-            </div>
+          <div>
+            {data.stock > 0 ? (
+              <span className='text-green-600 font-semibold'>In Stocks</span>
+            ) : (
+              <span className='text-red-600 font-semibold'>Out of Stock</span>
+            )}
+          </div>
 
-            <div className="mt-3 text-gray-600 text-sm">
-              Estimated Delivery : {" "}
-              <strong>{estimatedDelivery.toDateString()}</strong>
-            </div>
+          <div className="mt-3 text-gray-600 text-sm">
+            Estimated Delivery : {" "}
+            <strong>{estimatedDelivery.toDateString()}</strong>
           </div>
         </div>
       </div>
     </div>
+    </div >
   )
 }
 
