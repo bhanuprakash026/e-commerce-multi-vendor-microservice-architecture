@@ -33,7 +33,7 @@ const ProductDetailsCard = ({ data, setOpen, }: { data: any, setOpen: (open: boo
   const estimatedDelivery = new Date();
   estimatedDelivery.setDate(estimatedDelivery.getDate() + 5);
 
-  const wishlistedProductQuantity = wishlist?.filter((item: any) => item.id === data.id)[0].quantity;
+  const wishlistedProductQuantity = wishlist?.filter((item: any) => item.id === data.id)[0]?.quantity ?? 1;
   
   React.useEffect(() => {
     if(wishlistedProductQuantity) {
