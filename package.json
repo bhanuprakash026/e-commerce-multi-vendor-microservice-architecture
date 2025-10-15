@@ -72,6 +72,7 @@
     "@types/express-http-proxy": "^1.6.6",
     "@types/jest": "^29.5.12",
     "@types/jsonwebtoken": "^9.0.9",
+    "@types/kafkajs": "^1.8.2",
     "@types/morgan": "^1.9.9",
     "@types/node": "~18.16.9",
     "@types/node-cron": "^3.0.11",
