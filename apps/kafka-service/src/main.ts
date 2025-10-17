@@ -1,21 +1,45 @@
-/**
- * This is not a production server yet!
- * This is only a minimal backend to get started.
- */
+import { kafka } from "../../../packages/utils/kafka/index";
 
-import express from 'express';
-import * as path from 'path';
+const consumer = kafka.consumer({ groupId: "user-events-group" });
 
-const app = express();
+const eventQueue: any[] = []; // Batch Processing
 
-app.use('/assets', express.static(path.join(__dirname, 'assets')));
+const processQueue = async () => {
+  if (eventQueue.length === 0) return;
 
-app.get('/api', (req, res) => {
-  res.send({ message: 'Welcome to kafka-service!' });
-});
+  const events = [...eventQueue];
+  eventQueue.length = 0;
 
-const port = process.env.PORT || 3333;
-const server = app.listen(port, () => {
-  console.log(`Listening at http://localhost:${port}/api`);
-});
-server.on('error', console.error);
+  for(const event of events) {
+    if(event.action === "shop_visit") {
+      // update shop analytics
+    }
+
+    const validActions = [
+      "add_to_wishlist",
+      "add_to_cart",
+      "product_view",
+      "remove_from_wishlist",
+    ];
+
+    if(!event.action || !validActions.includes(event.action)) {
+      continue;
+    }
+
+    try {
+      await updateUserAnalytics(event);
+    } catch (error) {
+      console.log("Error processing event:", error);
+    }
+  }
+
+};
+
+setInterval(processQueue, 3000);
+
+// Kafka consumer for user events
+export const consumeKafkaMessages = async () => {
+  // connect to the Kafka broker
+  await consumer.connect();
+  await consumer.subscribe({topic: "users-events", fromBeginning: false});
+}
