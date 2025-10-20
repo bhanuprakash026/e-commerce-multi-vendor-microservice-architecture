@@ -11,8 +11,8 @@ const processQueue = async () => {
   const events = [...eventQueue];
   eventQueue.length = 0;
 
-  for(const event of events) {
-    if(event.action === "shop_visit") {
+  for (const event of events) {
+    if (event.action === "shop_visit") {
       // update shop analytics
     }
 
@@ -21,9 +21,10 @@ const processQueue = async () => {
       "add_to_cart",
       "product_view",
       "remove_from_wishlist",
+      "remove_from_cart"
     ];
 
-    if(!event.action || !validActions.includes(event.action)) {
+    if (!event.action || !validActions.includes(event.action)) {
       continue;
     }
 
@@ -41,16 +42,23 @@ setInterval(processQueue, 3000);
 // Kafka consumer for user events
 export const consumeKafkaMessages = async () => {
   // connect to the Kafka broker
+  console.log("Starting Kafka consumer...");
   await consumer.connect();
+  console.log("Kafka consumer connecteddd");
   await consumer.subscribe({topic: "users-events", fromBeginning: false});
 
+  console.log("Kafka consumer subscribed too users-events");
   await consumer.run({
     eachMessage: async({message}) => {
-      if(!message) return;
+      if(!message || !message?.value) return;
       const event = JSON.parse(message.value.toString());
       eventQueue.push(event)
     }
   })
 };
 
-consumeKafkaMessages().catch(console.error);
+export const bootstrapKafkaService = async () => {
+  await consumeKafkaMessages();
+};
+
+bootstrapKafkaService();
