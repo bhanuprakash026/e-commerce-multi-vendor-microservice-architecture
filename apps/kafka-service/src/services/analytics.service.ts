@@ -93,7 +93,7 @@ export const updateUserAnalytics = async (event: any) => {
 
 export const updateProductAnalystics = async (event: any) => {
   try {
-    if (event.productId) return;
+    if (!event.productId) return; // Changed from `if (event.productId) return;`
 
     // update fields dynamically
     const updateFields: any = {};
@@ -107,7 +107,7 @@ export const updateProductAnalystics = async (event: any) => {
 
     // Update or create Product analytics asynchronously
     await prisma.productAnalytics.upsert({
-      where: { productId: event.proudctId},
+      where: { productId: event.productId },
       update: {
         lastViewedAt: new Date(),
         ...updateFields
@@ -124,6 +124,6 @@ export const updateProductAnalystics = async (event: any) => {
     });
 
   } catch (error) {
-    console.log("Error Storing product analytics:", error)
+    console.log("Error Storing product analytics:", error);
   }
 };

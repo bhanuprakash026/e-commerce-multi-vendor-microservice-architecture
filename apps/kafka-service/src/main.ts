@@ -3,11 +3,13 @@ import { updateUserAnalytics } from "./services/analytics.service";
 
 const consumer = kafka.consumer({ groupId: "user-events-group" });
 
-const eventQueue: any[] = []; // Batch Processing
+const eventQueue: any[] = [];
+let isProcessing = false;
 
 const processQueue = async () => {
-  if (eventQueue.length === 0) return;
-
+  if (isProcessing || eventQueue.length === 0) return;
+  
+  isProcessing = true;
   const events = [...eventQueue];
   eventQueue.length = 0;
 
@@ -32,33 +34,84 @@ const processQueue = async () => {
       await updateUserAnalytics(event);
     } catch (error) {
       console.log("Error processing event:", error);
+      // Optionally push failed events back to queue or dead letter queue
     }
   }
-
+  
+  isProcessing = false;
 };
 
 setInterval(processQueue, 3000);
 
+let isConnected = false;
+
 // Kafka consumer for user events
 export const consumeKafkaMessages = async () => {
-  // connect to the Kafka broker
-  console.log("Starting Kafka consumer...");
-  await consumer.connect();
-  console.log("Kafka consumer connecteddd");
-  await consumer.subscribe({topic: "users-events", fromBeginning: false});
+  if (isConnected) {
+    console.log("Kafka consumer already connected");
+    return;
+  }
 
-  console.log("Kafka consumer subscribed too users-events");
-  await consumer.run({
-    eachMessage: async({message}) => {
-      if(!message || !message?.value) return;
-      const event = JSON.parse(message.value.toString());
-      eventQueue.push(event)
+  try {
+    console.log("Starting Kafka consumer...");
+    await consumer.connect();
+    isConnected = true;
+    console.log("Kafka consumer connected");
+
+    await consumer.subscribe({ topic: "users-events", fromBeginning: false });
+    console.log("Kafka consumer subscribed to users-events");
+
+    await consumer.run({
+      eachMessage: async ({ message }) => {
+        if (!message || !message?.value) return;
+        try {
+          const event = JSON.parse(message.value.toString());
+          eventQueue.push(event);
+        } catch (parseError) {
+          console.log("Error parsing Kafka message:", parseError);
+        }
+      }
+    });
+  } catch (error) {
+    console.error("Failed to start Kafka consumer:", error);
+    isConnected = false;
+    throw error;
+  }
+};
+
+export const disconnectKafka = async () => {
+  try {
+    if (isConnected) {
+      await consumer.disconnect();
+      isConnected = false;
+      console.log("Kafka consumer disconnected");
     }
-  })
+  } catch (error) {
+    console.error("Error disconnecting Kafka consumer:", error);
+  }
 };
 
 export const bootstrapKafkaService = async () => {
-  await consumeKafkaMessages();
+  try {
+    await consumeKafkaMessages();
+  } catch (error) {
+    console.error("Failed to bootstrap Kafka service:", error);
+    // Retry after delay
+    setTimeout(() => bootstrapKafkaService(), 5000);
+  }
 };
+
+// Handle graceful shutdown
+process.on('SIGINT', async () => {
+  console.log('Shutting down Kafka consumer...');
+  await disconnectKafka();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  console.log('Shutting down Kafka consumer...');
+  await disconnectKafka();
+  process.exit(0);
+});
 
 bootstrapKafkaService();

@@ -1,8 +1,16 @@
 "use server"
 import { kafka } from "../../../../packages/utils/kafka/index";
 
-// Producer send the message to consumer.
+// Single producer instance
 const producer = kafka.producer();
+let isProducerConnected = false;
+
+const ensureProducerConnected = async () => {
+  if (!isProducerConnected) {
+    await producer.connect();
+    isProducerConnected = true;
+  }
+};
 
 export async function sendKafkaEvent(eventData: {
   userId?: string
@@ -14,12 +22,31 @@ export async function sendKafkaEvent(eventData: {
   city?: string
 }) {
   try {
-    await producer.connect();
+    await ensureProducerConnected();
+    
     await producer.send({
       topic: "users-events",
-      messages: [{value: JSON.stringify(eventData)}],
+      messages: [{ value: JSON.stringify(eventData) }],
     });
+    
+    console.log("Kafka event sent successfully:", eventData.action);
   } catch (error) {
-    console.log(error);
-  } 
+    console.error("Error sending Kafka event:", error);
+    // Reset connection state on error
+    isProducerConnected = false;
+    throw error;
+  }
 }
+
+// Optional: Export disconnect for graceful shutdown
+export const disconnectKafkaProducer = async () => {
+  try {
+    if (isProducerConnected) {
+      await producer.disconnect();
+      isProducerConnected = false;
+      console.log("Kafka producer disconnected");
+    }
+  } catch (error) {
+    console.error("Error disconnecting Kafka producer:", error);
+  }
+};
