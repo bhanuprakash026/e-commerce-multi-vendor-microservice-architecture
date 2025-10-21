@@ -429,3 +429,24 @@ export const getAllProducts = async (
     next(error);
   }
 };
+
+// get product details
+export const getProductDetails = async ( req: Request, res: Response, next: NextFunction) => {
+  try {
+    const product = await prisma.products.findUnique({
+      where: {
+        slug: req.params.slug!
+      },
+      include: {
+        images: true,
+        Shop: true,
+      },
+    });
+    res.status(201).json({
+      success: true,
+      product,
+    })
+  } catch (error) {
+    next(error)
+  }
+}
