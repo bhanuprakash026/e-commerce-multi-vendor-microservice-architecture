@@ -138,23 +138,26 @@ model products {
 }
 
 model userAnalytics {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId      String   @unique @db.ObjectId
-  lastVisited DateTime @default(now())
-  actions     Json // store the array of user action objects
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String    @unique @db.ObjectId
+  lastVisited DateTime  @default(now())
+  lastTrained DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  actions     Json
   country     String?
   city        String?
   device      String?
 
   user users? @relation(fields: [userId], references: [id])
 
-  @@map("user_analytics")
+  @@map("userAnalytics")
 }
 
 model productAnalytics {
   id           String   @id @default(auto()) @map("_id") @db.ObjectId
   productId    String   @unique @db.ObjectId
-  shopId       String?   @db.ObjectId
+  shopId       String?  @db.ObjectId
   views        Int      @default(0)
   cartAdds     Int      @default(0)
   wishlistAdds Int      @default(0)
@@ -164,5 +167,5 @@ model productAnalytics {
   updatedAt    DateTime @updatedAt
 
   product products @relation(fields: [productId], references: [id])
-  shop    shops?    @relation(fields: [shopId], references: [id])
+  shop    shops?   @relation(fields: [shopId], references: [id])
 }

@@ -38,7 +38,6 @@ export async function sendKafkaEvent(eventData: {
   }
 }
 
-// Optional: Export disconnect for graceful shutdown
 export const disconnectKafkaProducer = async () => {
   try {
     if (isProducerConnected) {

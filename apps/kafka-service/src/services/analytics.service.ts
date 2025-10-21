@@ -5,53 +5,54 @@ export const updateUserAnalytics = async (event: any) => {
     const existingData = await prisma.userAnalytics.findUnique({
       where: {
         userId: event.userId,
-      }
+      },
+      select: { actions: true }
     });
 
-    let udpatedActions: any = existingData?.actions || [];
+    let updatedActions: any = existingData?.actions || [];
 
-    const actionExists = udpatedActions.some((entry: any) => entry.productId === event.id && event.action === event.action);
+    const actionExists = updatedActions.some(
+      (entry: any) => entry.productId === event.productId && entry.action === event.action
+    );
 
-    // Always strore `product_view` for recommendations
+    // Always store `product_view` for recommendations
     if (event.action === "product_view") {
-      udpatedActions.push({
-        productId: event?.productId,
+      updatedActions.push({
+        productId: event.productId,
         shopId: event.shopId,
         action: "product_view",
-        timeStamp: new Date()
-      })
+        timeStamp: new Date(),
+      });
     }
 
     else if (["add_to_cart", "add_to_wishlist"].includes(event.action) && !actionExists) {
-      udpatedActions.push({
-        productId: event?.productId,
+      updatedActions.push({
+        productId: event.productId,
         shopId: event.shopId,
         action: event.action,
-        timeStamp: new Date()
-      })
+        timeStamp: new Date(),
+      });
     }
 
-    // Remove `add_to_cart` when `remove_from_cart` is triggered
+    // Remove from cart
     else if (event.action === "remove_from_cart") {
-      udpatedActions.filter((entry: any) =>
-        !(
-          entry.id === event.productId && event.action === "add_to_cart"
-        )
-      )
+      updatedActions = updatedActions.filter(
+        (entry: any) =>
+          !(entry.productId === event.productId && entry.action === "add_to_cart")
+      );
     }
 
-    // Remove `add_to_wishlist` when `remove_from_wishlist` is triggered
+    // Remove from wishlist
     else if (event.action === "remove_from_wishlist") {
-      udpatedActions.filter((entry: any) =>
-        !(
-          entry.id === event.productId && event.action === "add_to_wishlist"
-        )
-      )
+      updatedActions = updatedActions.filter(
+        (entry: any) =>
+          !(entry.productId === event.productId && entry.action === "add_to_wishlist")
+      );
     }
 
-    // Keep only the last 100 actions ( prevent storage overload)
-    if (udpatedActions.length > 100) {
-      udpatedActions.shift();
+    // Keep only last 100 actions
+    if (updatedActions.length > 100) {
+      updatedActions = updatedActions.slice(-100);
     }
 
     const extraFields: Record<string, any> = {};
@@ -73,13 +74,13 @@ export const updateUserAnalytics = async (event: any) => {
       where: { userId: event.userId },
       update: {
         lastVisited: new Date(),
-        actions: udpatedActions,
+        actions: updatedActions,
         ...extraFields,
       },
       create: {
         userId: event?.userId,
         lastVisited: new Date(),
-        actions: udpatedActions,
+        actions: updatedActions,
         ...extraFields
       }
     });
@@ -101,9 +102,9 @@ export const updateProductAnalystics = async (event: any) => {
     if (event.action === "product_view") updateFields.views = { increment: 1 };
     if (event.action === "add_to_cart") updateFields.cartAdds = { increment: 1 };
     if (event.action === "remove_from_cart") updateFields.cartAdds = { decrement: 1 };
-    if (event.action === "add_to_wishlist") updateFields.wishlistAdds = { increment: 1};
-    if(event.action === "remove_from_wishlist") updateFields.wishlistAdds = { decrement: 1};
-    if(event.action === "purchase") updateFields.purchases = { increment: 1};
+    if (event.action === "add_to_wishlist") updateFields.wishlistAdds = { increment: 1 };
+    if (event.action === "remove_from_wishlist") updateFields.wishlistAdds = { decrement: 1 };
+    if (event.action === "purchase") updateFields.purchases = { increment: 1 };
 
     // Update or create Product analytics asynchronously
     await prisma.productAnalytics.upsert({

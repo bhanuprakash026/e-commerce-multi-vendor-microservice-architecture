@@ -131,7 +131,7 @@ const CartPage = () => {
                     <td className='text-center'>
                       <button
                         className='text-[#818487] cursor-pointer hover:text-[#ff1826] transistion duration-200'
-                        onClick={() => removeFromCart(item.id)}
+                        onClick={() => removeFromCart(item.id, user, location, deviceInfo)}
                       >
                         x Remove
                       </button>

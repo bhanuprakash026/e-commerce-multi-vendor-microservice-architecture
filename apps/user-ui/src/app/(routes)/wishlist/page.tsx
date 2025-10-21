@@ -98,7 +98,7 @@ const WishlistPage = () => {
                     <td>
                       <button
                         className='text-[#818487] cursor-pointer hover:text-[#ff1826] px-5 py-2 rounded-md transition-all duration-200'
-                        onClick={() => removeFormWishlist(item.id)}
+                        onClick={() => removeFormWishlist(item.id, user, location, deviceInfo)}
                       >
                         X Remove
                       </button>

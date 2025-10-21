@@ -34,7 +34,6 @@ const processQueue = async () => {
       await updateUserAnalytics(event);
     } catch (error) {
       console.log("Error processing event:", error);
-      // Optionally push failed events back to queue or dead letter queue
     }
   }
   
