@@ -1,7 +1,10 @@
 "use client";
+import useDeviceTracking from "@/hooks/useDeviceTracking";
+import useLocationTracking from "@/hooks/useLocationTracking";
+import useUser from "@/hooks/useUser";
 import Ratings from "@/shared/components/ratings";
 import { useStore } from "@/store";
-import { Heart } from "lucide-react";
+import { Heart, ShoppingBagIcon } from "lucide-react";
 import Link from "next/link";
 import React, { useState, useRef } from "react";
 
@@ -22,6 +25,10 @@ const ProductDetails = ({ productDetails }: { productDetails: any }) => {
   const removeFromWishlist = useStore((state: any) => state.removeFormWishlist);
   const wishlist = useStore((state: any) => state.wishlist);
   const isWishlisted = wishlist.some((item: any) => item.id === productDetails.id);
+
+  const { user, isLoading } = useUser();
+  const location = useLocationTracking();
+  const deviceInfo = useDeviceTracking()
 
   const [showMagnifier, setShowMagnifier] = useState(false);
   const [magnifierPos, setMagnifierPos] = useState({ x: 0, y: 0 });
@@ -153,7 +160,73 @@ const ProductDetails = ({ productDetails }: { productDetails: any }) => {
                     </div>
                   </div>
                 )}
+                {productDetails?.sizes?.length > 0 && (
+                  <div>
+                    <strong>Color:</strong>
+                    <div className="flex gap-2 mt-1">
+                      {productDetails?.sizes?.map((size: string, index: number) => (
+                        <button
+                          key={index}
+                          className={`px-4 py-1 cursor-pointer rounded-md transition ${isSizeSelected === size ? "bg-gray-800 text-white" : "bg-gray-300 text-black"} `}
+                          onClick={() => setIsSizeSelected(size)}
+                        >
+                          {size}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
+            </div>
+            <div className="mt-6">
+              <div className="flex items-center rounded-md">
+                <div className="flex items-center rounded-md">
+                  <button
+                    className="px-3 cursor-pointer py-1 bg-gray-300 hover:bg-gray-400 text-black font-semibold rounded-l-md"
+                    onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
+                  >
+                    -
+                  </button>
+                  <span className="px-4 bg-gray-100 py-1">{quantity}</span>
+                  <button
+                    className="px-3 cursor-pointer py-1 bg-gray-300 hover:bg-gray-400 text-black font-semibold rounded-r-md mr-3"
+                    onClick={() => setQuantity((prev) => prev + 1)}
+                  >
+                    +
+                  </button>
+                </div>
+                {productDetails?.stock > 0 ? (
+                  <span className="text-green-600 font-semibold">
+                    In Stock {" "}
+                    <span className="text-gray-500 font-medium">
+                      (Stock {productDetails?.stock})
+                    </span>
+                  </span>
+                ) : (
+                  <span className="text-red-600 font-semibold">Out of Stcok</span>
+                )}
+              </div>
+
+              <button
+                className={`flex mt-6 items-center gap-2 px-5 py-[10px] bg-[#ff5722] hover:bg-[#e64a19] text-white font-medium rounded-lg transition-shadow ${isInCart ? "cursor-not-allowed" : "cursor-pointer"} `}
+                disabled={isInCart || productDetails?.stock === 0}
+                onClick={() => {
+                  addToCart({
+                    ...productDetails,
+                    quantity,
+                    selectedOptions: {
+                      color: isSelected,
+                      size: isSizeSelected,
+                    }
+                  },
+                    user,
+                    location,
+                    deviceInfo
+                  )
+                }}
+              >
+                <ShoppingBagIcon size={18} /> Add to Cart
+              </button>
             </div>
           </div>
         </div>
