@@ -170,3 +170,16 @@ model productAnalytics {
   product products @relation(fields: [productId], references: [id])
   shop    shops?   @relation(fields: [shopId], references: [id])
 }
+
+model address {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  label     String
+  name      String
+  street    String
+  city      String
+  zip       String
+  country   String
+  isDefault Boolean  @default(true)
+  createdAt DateTime @default(now())
+}

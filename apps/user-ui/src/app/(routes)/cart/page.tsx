@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import useUser from '@/hooks/useUser';
 import useLocationTracking from '@/hooks/useLocationTracking';
@@ -8,6 +8,8 @@ import Link from 'next/link';
 import { useStore } from '@/store';
 import Image from 'next/image';
 import { Loader2 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import axiosInstance from '@/utils/axiosInstance';
 
 const CartPage = () => {
   const router = useRouter();
@@ -42,6 +44,24 @@ const CartPage = () => {
   const subtotal = cart.reduce(
     (total: number, item: any) => total + item.quantity * item.sale_price, 0
   )
+
+  const { data: addresses = [] } = useQuery<any[], Error>({
+    queryKey: ["shipping-addresses"],
+    queryFn: async () => {
+      const res = await axiosInstance.get("/api/shipping-addresses");
+      return res.data.addresses;
+    },
+  });
+
+  useEffect(() => {
+    if (addresses.length > 0 && !selectedAddressId) {
+      const defaultAddr = addresses.find((e) => e.isDefault);
+
+      if (defaultAddr) {
+        setSelectedAddressId(defaultAddr)
+      }
+    }
+  }, [addresses, selectedAddressId]);
 
   return (
     <div className='w-full bg-white'>
@@ -177,13 +197,23 @@ const CartPage = () => {
                 <hr className='my-4 text-slate-200' />
                 <div className="mb-4">
                   <h4 className='mb-[7px] font-medium text-[15px]'>Select Shipping Address</h4>
-                  <select
-                    className='w-full p-2 border border-gray-200 rounded-md focus:outline-none focus:border-blue-500'
-                    value={selectedAddressId}
-                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedAddressId(e.target.value)}
-                  >
-                    <option value="123"> Home - New York - USA</option>
-                  </select>
+                  {addresses?.length !== 0 && (
+                    <select
+                      className='w-full p-2 border border-gray-200 rounded-md focus:outline-none focus:border-blue-500'
+                      value={selectedAddressId}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedAddressId(e.target.value)}
+                    >
+                      {addresses?.map((address) => (
+                        <option key={address.id} value={address.id}>
+                          {address.label} - {address.city}, {address.country}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+
+                  {addresses.length === 0 && (
+                    <p className='text-sm text-slate-800'>Please add an address from profile to crete an order!</p>
+                  )}
                 </div>
                 <hr className='my-4 text-slate-200' />
 
@@ -210,7 +240,7 @@ const CartPage = () => {
                   className='w-full flex items-center justify-center gap-2 cursor-pointer mt-4 py-3 bg-[#010f1c] text-white hover:bg-[#0989FF] transition-all rounded-lg'
                 >
                   {loading && <Loader2 className='animate-spin w-5 h-5' />}
-                  {loading ? "Redirecting..." : "Proceed to Checkout" }
+                  {loading ? "Redirecting..." : "Proceed to Checkout"}
                 </button>
               </div>
             </div>
