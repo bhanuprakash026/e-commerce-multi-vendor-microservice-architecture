@@ -2,8 +2,10 @@
 import useDeviceTracking from "@/hooks/useDeviceTracking";
 import useLocationTracking from "@/hooks/useLocationTracking";
 import useUser from "@/hooks/useUser";
+import ProductCard from "@/shared/components/cards/product-card";
 import Ratings from "@/shared/components/ratings";
 import { useStore } from "@/store";
+import axiosInstance from "@/utils/axiosInstance";
 import { Heart, MapPin, MessageSquareText, Package, ShoppingBagIcon, WalletMinimal } from "lucide-react";
 import Link from "next/link";
 import React, { useState, useRef } from "react";
@@ -56,6 +58,32 @@ const ProductDetails = ({ productDetails }: { productDetails: any }) => {
     ((productDetails.regular_price - productDetails.sale_price) / productDetails.regular_price) * 100
   );
 
+  const fetchFilteredProducts = async () => {
+    try {
+      const query = new URLSearchParams();
+
+      
+      query.set("priceRange", priceRange.join(","));
+      query.set("page", "1");
+      query.set("limit", "5");
+      
+      console.log("query:--", typeof priceRange.join(","));
+      const res = await axiosInstance.get(
+        `/product/api/get-filtered-products?${query.toString()}`
+      );
+
+      console.log(`/product/api/get-filtered-products?${query.toString()}`);
+      console.log("res:--", res);
+
+      setRecommendedProducts(res.data.products);
+    } catch (error) {
+      console.error("Failed to fetch filtered products", error);
+    }
+  }
+
+  React.useEffect(() => {
+    fetchFilteredProducts();
+  }, [priceRange])
 
   return (
     <div className="w-full bg-[#f5f5f5] py-5">
@@ -302,7 +330,43 @@ const ProductDetails = ({ productDetails }: { productDetails: any }) => {
                   <p className="text-lg font-semibold">100%</p>
                 </div>
               </div>
+
+              { /* Go to Store */}
+              <div className="text-center mt-4 border-t border-t-gray-200 pt-2">
+                <Link href={`/shop/${productDetails?.Shop.id}`} className="text-blue-500 font-medium text-sm hover:underline">GO TO STORE</Link>
+              </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mx-auto .w-[90%] lg:w-[80%] mt-5">
+        <div className="bg-white h-full min-h-[60vh] p-5">
+          <h3 className="text-lg font-semibold">
+            Product details of {productDetails?.title}
+          </h3>
+          <div
+            className="prose prose-sm text-slate-900 max-w-none"
+            dangerouslySetInnerHTML={{
+              __html: productDetails?.detailed_description,
+            }}
+          />
+        </div>
+      </div>
+      <div className="w-[90%] lg:w-[80%] mx-auto">
+        <div className="bg-white min-h-[50vh] h-full mt-5 p-5">
+          <h3 className="text-lg font-semibold">Ratings & Reviews of {productDetails?.title}</h3>
+          <p className="text-center">No Reviews available yet!</p>
+        </div>
+      </div>
+
+      <div className="w-[90%] lg:w-[80%] mx-auto">
+        <div className="w-full h-full my-5 py-5">
+          <h3 className="text-xl font-semibold mb-2">You may also like</h3>
+          <div className="m-auto grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
+            {recommendedProducts?.map((i: any) => (
+              <ProductCard key={i.id} product={i} />
+            ))}
           </div>
         </div>
       </div>

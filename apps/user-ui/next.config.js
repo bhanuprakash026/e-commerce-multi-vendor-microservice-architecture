@@ -14,7 +14,7 @@ const nextConfig = {
     svgr: false,
   },
   images: {
-    domains: ["t4.ftcdn.net", 'ik.imagekit.io','cdn-icons-png.freepik.com'], // ✅ Add this domain
+    domains: ["t4.ftcdn.net", 'ik.imagekit.io','cdn-icons-png.freepik.com','previews.123rf.com','fitsmallbusiness.com'],
   },
 };
 

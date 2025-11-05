@@ -67,6 +67,7 @@ const ProductCard = ({ product, isEvent }: { product: any; isEvent?: boolean }) 
 					width={300}
 					height={300}
 					className='w-full h-[200px] object-cover mx-auto rounded-t-md'
+					alt={product?.slug}
 				/>
 			</Link>
 

@@ -52,6 +52,7 @@ model shops {
   avatar           images[]
   coverBanner      String?
   address          String
+  country          String
   opening_hours    String?
   website          String?
   socialLinks      Json[]
