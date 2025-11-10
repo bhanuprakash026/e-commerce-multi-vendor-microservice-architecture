@@ -30,6 +30,7 @@ model users {
   updatedAt     DateTime        @updatedAt
   shopReviews   shopReviews[]
   userAnalytics userAnalytics[]
+  orders        orders[]
 }
 
 model shopReviews {
@@ -64,6 +65,7 @@ model shops {
   updatedAt        DateTime           @updatedAt
   products         products[]
   productAnalytics productAnalytics[]
+  orders           orders[]
 }
 
 model sellers {
@@ -136,6 +138,7 @@ model products {
   Shop                  shops              @relation(fields: [shopId], references: [id])
   totalSales            Int                @default(0)
   productAnalytics      productAnalytics[]
+  orderItems            orderItems[]
 }
 
 model userAnalytics {
@@ -182,4 +185,45 @@ model address {
   country   String
   isDefault Boolean  @default(true)
   createdAt DateTime @default(now())
+}
+
+model orderItems {
+  id              String @id @default(auto()) @map("_id") @db.ObjectId
+  orderId         String @db.ObjectId
+  productId       String @db.ObjectId
+  quantity        Int
+  price           Float
+  selectedOptions Json?
+
+  order   orders   @relation(fields: [orderId], references: [id])
+  product products @relation(fields: [productId], references: [id])
+}
+
+model orders {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String   @db.ObjectId
+  shopId            String   @db.ObjectId
+  total             Float
+  status            String
+  shippingAddressId String?  @db.ObjectId
+  couponCode        String?
+  deliveryStatus    String
+  discountAmount    Float    @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user  users        @relation(fields: [userId], references: [id])
+  shop  shops        @relation(fields: [shopId], references: [id])
+  items orderItems[]
+}
+
+model notifications {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  title         String
+  message       String
+  createdId     String   @db.ObjectId
+  receivedId    String   @db.ObjectId
+  redirect_link String?
+  createdAt     DateTime @default(now())
+  isRead        Boolean  @default(false)
 }

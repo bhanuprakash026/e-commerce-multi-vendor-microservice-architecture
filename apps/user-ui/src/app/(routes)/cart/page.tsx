@@ -10,6 +10,7 @@ import Image from 'next/image';
 import { Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import axiosInstance from '@/utils/axiosInstance';
+import toast from 'react-hot-toast';
 
 const CartPage = () => {
   const router = useRouter();
@@ -22,8 +23,26 @@ const CartPage = () => {
   const [discountedProductId, setDiscountedProudctId] = useState("");
   const [discountPercent, setDiscountPercent] = useState(0);
   const [discountAmount, setDiscountAmount] = useState(0);
-  const [coupanCode, setCoupanCode] = useState("");
+  const [couponCode, setcouponCode] = useState("");
   const [selectedAddressId, setSelectedAddressId] = useState("");
+
+  const createPaymentSession = async () => {
+    setLoading(true);
+    try {
+      const res = await axiosInstance.post("/order/pai/create-payment-session", {
+        cart,
+        selectedAddressId,
+        coupon: {}
+      });
+
+      const sessionId = res.data.sessionId;
+      router.push(`/checkout?sessionId=${sessionId}`);
+    } catch (error) {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const decreaseQuantity = (id: string) => {
     useStore.setState((state: any) => ({
@@ -181,14 +200,14 @@ const CartPage = () => {
                 <div className="flex">
                   <input
                     type='text'
-                    value={coupanCode}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCoupanCode(e.target.value)}
-                    placeholder='Enter coupan code'
+                    value={couponCode}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setcouponCode(e.target.value)}
+                    placeholder='Enter coupon code'
                     className='w-full p-2 border border-gray-200 rounded-l-lg focus:outline-none focus:border-blue-500'
                   />
                   <button
                     className='bg-blue-500 cursor-pointer text-white px-4 rounded-r-md hover:bg-blue-600 transition-all'
-                  // onClick={() => applyCoupanCode}
+                  // onClick={() => applycouponCode}
                   >
                     Apply
                   </button>
@@ -236,6 +255,7 @@ const CartPage = () => {
                 </div>
 
                 <button
+                onClick={createPaymentSession}
                   disabled={loading}
                   className='w-full flex items-center justify-center gap-2 cursor-pointer mt-4 py-3 bg-[#010f1c] text-white hover:bg-[#0989FF] transition-all rounded-lg'
                 >

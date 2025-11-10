@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Confirmation</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+
+    .container {
+      background: #ffffff;
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 20px;
+      border-radius: 6px;
+    }
+
+    .title {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #000;
+    }
+
+    .item-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 20px;
+      background: #000;
+      color: #fff !important;
+      text-decoration: none;
+      border-radius: 4px;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    .footer {
+      font-size: 12px;
+      color: #666;
+      text-align: center;
+      margin-top: 20px;
+    }
+
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <p>Hello <strong><%= name %></strong>,</p>
+
+    <p>Thank you for your order! Here are your order details:</p>
+
+    <div class="title">🛍️ Order Summary</div>
+
+    <!-- Order Items -->
+    <div>
+      <% cart.forEach(item => { %>
+        <div class="item-row">
+          <div>
+            <strong><%= item.title %></strong><br/>
+            <small><%= item.quantity %> × $<%= item.sale_price.toFixed(2) %></small>
+          </div>
+          <div>$<%= (item.quantity * item.sale_price).toFixed(2) %></div>
+        </div>
+      <% }) %>
+    </div>
+
+    <!-- Total -->
+    <p style="font-size: 16px; font-weight: bold; margin-top: 12px;">
+      Total: $<%= Number(totalAmount).toFixed(2) %>
+    </p>
+
+    <!-- Tracking Button -->
+    <a href="<%= trackingUrl %>" class="btn" target="_blank">Track Order</a>
+
+    <p class="footer">
+      If the button doesn't work, use this link: <br>
+      <a href="<%= trackingUrl %>"><%= trackingUrl %></a><br><br>
+      &copy; <%= new Date().getFullYear() %> Eshop
+    </p>
+  </div>
+</body>
+</html>
