@@ -2,8 +2,7 @@
 
 import React, { useEffect } from "react"
 import { CheckCircle, Truck } from "lucide-react";
-import { useSearchParams } from "next/navigation";
-import { useRouter } from "next/router";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useStore } from "@/store";
 import confetti from "canvas-confetti";
 

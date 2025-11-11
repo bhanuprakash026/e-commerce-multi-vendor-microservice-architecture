@@ -207,7 +207,7 @@ model orders {
   status            String
   shippingAddressId String?  @db.ObjectId
   couponCode        String?
-  deliveryStatus    String
+  deliveryStatus    String @default("Pending")
   discountAmount    Float    @default(0)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt

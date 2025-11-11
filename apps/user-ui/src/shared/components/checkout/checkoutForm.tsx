@@ -69,7 +69,7 @@ const CheckoutForm = ({
               <>
                 <span>Discount</span>
                 <span className="text-green-600">
-                  ${(coupon?.discountAmount).toFixed(2)}
+                  ${coupon ? (coupon?.discountAmount)?.toFixed(2) : 0}
                 </span>
               </>
             )}
@@ -77,7 +77,7 @@ const CheckoutForm = ({
 
           <div className="flex justify-between font-semibold mt-2">
             <span>Total</span>
-            <span>${(total - coupon ? coupon?.discountAmount : 0).toFixed(2)}</span>
+            <span>${(total - (coupon ? coupon?.discountAmount : 0)).toFixed(2)}</span>
           </div>
         </div>
 

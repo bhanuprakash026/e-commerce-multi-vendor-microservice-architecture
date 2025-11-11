@@ -8,28 +8,30 @@ import { createOrder } from './controllers/order.controller';
 
 const app = express();
 app.use(
+  express.json({
+    verify: (req: any, res, buf) => {
+      if (req.originalUrl === "/api/create-order") {
+        req.rawBody = buf;
+      }
+    }
+  })
+);
+
+app.use(
   cors({
     origin: ["http://localhost:3000"],
     allowedHeaders: ["Authorization", "Content-Type"],
     credentials: true,
   })
 );
-
-app.post("/api/create-order", bodyParser.raw({ type: "application/json" }), (req, res, next) => {
-  (req as any).rawBody = req.body;
-  next();
-},
-  createOrder
-);
-
-app.use(express.json());
 app.use(cookieParser())
 
 app.get('/', (req, res) => {
   res.send({ message: 'Welcome to order-service!' });
 });
+app.post("/api/create-order", createOrder);
 
-app.use("/app", router);
+app.use("/order", router);
 
 app.use(errorMiddleware)
 

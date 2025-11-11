@@ -4,9 +4,9 @@ import { createPaymentIntent, createPaymentSession, verifyingPaymentSession } fr
 
 const router: Router = express.Router();
 
-router.post("/create-payment-intent", isAuthenticated, createPaymentIntent);
-router.post("/create-payment-session", isAuthenticated, createPaymentSession);
-router.get("/verifying-payment-session", isAuthenticated, verifyingPaymentSession);
+router.post("/api/create-payment-intent", isAuthenticated, createPaymentIntent);
+router.post("/api/create-payment-session", isAuthenticated, createPaymentSession);
+router.get("/api/verifying-payment-session", isAuthenticated, verifyingPaymentSession);
 
 
 export default router;

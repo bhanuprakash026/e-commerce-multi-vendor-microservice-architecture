@@ -18,6 +18,7 @@ export const createPaymentIntent = async (req: Request, res: Response, next: Nex
   const { amount, sellerStripeAccountId, sessionId } = req.body;
   const customerAmount = Math.round(amount * 100);
   const platformFee = Math.floor(customerAmount * 0.1);
+
   try {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: customerAmount,
@@ -27,6 +28,7 @@ export const createPaymentIntent = async (req: Request, res: Response, next: Nex
       transfer_data: {
         destination: sellerStripeAccountId || ""
       },
+      on_behalf_of: sellerStripeAccountId,
       metadata: {
         sessionId,
         userId: (req as any).user?.id
@@ -163,6 +165,7 @@ export const verifyingPaymentSession = async (req: Request, res: Response, next:
 
 // Create order
 export const createOrder = async (req: Request, res: Response, next: NextFunction) => {
+  console.log("Calling createOrder route handler")
   try {
     const stripeSignature = req.headers["stripe-signature"];
     if (!stripeSignature) {
@@ -182,6 +185,8 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
       console.log("Webhook signature verification failed.", error.message);
       return res.status(400).send(`Webhook Error: ${error.message}`);
     }
+
+    console.log("stripe event:--", event)
 
     if (event.type === "payment_intent.succeeded") {
       const paymentIntent = event.data.object as Stripe.PaymentIntent;
@@ -214,15 +219,16 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
 
         if (coupon && coupon.discountedProdectId && orderItems.some((item: any) => item.id === coupon.discountedProdectId)) {
           const discountedItem = orderItems.find((item: any) => item.id === coupon.discountedProdectId);
-
           if (discountedItem) {
-            const discount = coupon.discountPercent > 0 ? (discountedItem.sale_price * discountedItem.quantity * coupon.discountPercent) / 100 : coupon.discountAmount;
+            const discount = coupon.discountPercent > 0 ?
+              (discountedItem.sale_price * discountedItem.quantity * coupon.discountPercent) / 100 :
+              coupon.discountAmount;
             orderTotal -= discount;
           }
         }
 
-        // Create the Order
-        await prisma.orders.create({
+        // Create order with nested order items
+        const order = await prisma.orders.create({
           data: {
             userId,
             shopId,
@@ -236,11 +242,16 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
                 productId: item.id,
                 quantity: item.quantity,
                 price: item.sale_price,
-                selectedOptions: item.selectedOptions
+                selectedOptions: item.selectedOptions || {}
               }))
             }
+          },
+          include: {
+            items: true // Include items to verify creation
           }
         });
+
+        console.log(`Created order ${order.id} with ${order.items.length} items`);
 
         // Update Product & analytics
         for (const item of orderItems) {
@@ -297,7 +308,6 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
               }
             });
           }
-
         }
 
         // Send email to user
@@ -305,28 +315,25 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
           email,
           {
             name,
-            cart,
-            totalAmount: coupon?.discountAmount
-              ? totalAmount - coupon.discountAmount
-              : totalAmount,
-            trackingUrl: `https://eshop.com/order/${sessionId}`,
+            cart: orderItems, // Use orderItems instead of full cart
+            totalAmount: orderTotal,
+            trackingUrl: `https://eshop.com/order/${order.id}`,
           },
           "order-confirmation",
           "🛍️ Your Eshop Order Confirmation"
         );
 
-        const createdShopsIds = Object.keys(shopGrouped);
-        const sellerShops = await prisma.shops.findMany({
-          where: {id : { in: createdShopsIds}},
+        // Create notification for seller
+        const shop = await prisma.shops.findUnique({
+          where: { id: shopId },
           select: {
-            id: true,
             sellerId: true,
             name: true
           }
         });
 
-        for (const shop of sellerShops) {
-          const firstProduct = shopGrouped[shop.id][0];
+        if (shop) {
+          const firstProduct = orderItems[0];
           const productTitle = firstProduct?.title || "new item";
 
           await prisma.notifications.create({
@@ -335,7 +342,7 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
               message: `A customer just ordered ${productTitle} from your shop`,
               createdId: userId,
               receivedId: shop.sellerId,
-              redirect_link: `https://eshop.com/order/${sessionId}`
+              redirect_link: `https://eshop.com/order/${order.id}`
             },
           });
         }
@@ -347,14 +354,16 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
             message: `A new order was placed by ${name}`,
             createdId: userId,
             receivedId: "admin",
-            redirect_link: `https://eshop.com/order/${sessionId}`
+            redirect_link: `https://eshop.com/order/${order.id}`
           },
         });
 
         await redis.del(sessionKey);
       }
     }
-    res.status(200).json({received: true});
+    console.log("stripe event:--", event)
+
+    res.status(200).json({ received: true });
   } catch (error) {
     console.log(error);
     return next(error)

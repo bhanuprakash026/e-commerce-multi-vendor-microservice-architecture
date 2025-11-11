@@ -29,15 +29,17 @@ const CartPage = () => {
   const createPaymentSession = async () => {
     setLoading(true);
     try {
-      const res = await axiosInstance.post("/order/pai/create-payment-session", {
+      const res = await axiosInstance.post("/order/api/create-payment-session", {
         cart,
         selectedAddressId,
-        coupon: {}
-      });
+        coupon: {},
+        
+      }, {withCredentials: true});
 
       const sessionId = res.data.sessionId;
       router.push(`/checkout?sessionId=${sessionId}`);
     } catch (error) {
+      console.log("error:--", error);
       toast.error("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
@@ -77,7 +79,7 @@ const CartPage = () => {
       const defaultAddr = addresses.find((e) => e.isDefault);
 
       if (defaultAddr) {
-        setSelectedAddressId(defaultAddr)
+        setSelectedAddressId(defaultAddr.id)
       }
     }
   }, [addresses, selectedAddressId]);

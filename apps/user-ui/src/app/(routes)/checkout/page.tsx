@@ -28,7 +28,7 @@ const Page = () => {
       }
 
       try {
-        const verfiyRes = await axiosInstance.get(`order/api/veryfying-payment-session?sessionId=${sessionId}`);
+        const verfiyRes = await axiosInstance.get(`order/api/verifying-payment-session?sessionId=${sessionId}`);
 
         const { totalAmount, sellers, cart, coupon } = verfiyRes.data.session;
 
@@ -41,7 +41,7 @@ const Page = () => {
         const sellerStripeAccountId = sellers[0].stripeAccountId;
 
         const intentRes = await axiosInstance.post(
-          "order/pai/create-payment-intent",
+          "order/api/create-payment-intent",
           {
             amount: coupon?.discountAmount ? totalAmount - coupon?.discountAmount : totalAmount,
             sellerStripeAccountId,
