@@ -9,6 +9,8 @@ import axiosInstance from '@/utils/axiosInstance';
 import Image from 'next/image';
 import QuickActionCard from '@/shared/components/cards/quick-action.card';
 import ShippingAddresSection from '@/shared/components/shippingAddress';
+import OrdersTable from '@/shared/components/tables/orders-table';
+import ChangePassword from '@/shared/components/chang-password';
 
 const Page = () => {
   const searchParams = useSearchParams();
@@ -147,9 +149,11 @@ const Page = () => {
               </div>
             ) : activeTab === "Shipping Address" ? (
               <ShippingAddresSection />
-            ) : (
-              <></>
-            )}
+            ) : activeTab === "My Orders" ? (
+              <OrdersTable />
+            ) : activeTab === "Change Password" ? (
+              <ChangePassword />
+            ) : <></> }
           </div>
 
           {/* Right Quick Panel */}

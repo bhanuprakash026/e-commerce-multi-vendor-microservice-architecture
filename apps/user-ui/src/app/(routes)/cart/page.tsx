@@ -10,7 +10,7 @@ import Image from 'next/image';
 import { Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import axiosInstance from '@/utils/axiosInstance';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 const CartPage = () => {
   const router = useRouter();
@@ -20,21 +20,66 @@ const CartPage = () => {
   const cart = useStore((state: any) => state.cart);
   const removeFromCart = useStore((state: any) => state.removeFromCart);
   const [loading, setLoading] = useState(false);
-  const [discountedProductId, setDiscountedProudctId] = useState("");
+  const [discountedProductId, setDiscountedProductId] = useState("");
   const [discountPercent, setDiscountPercent] = useState(0);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [couponCode, setcouponCode] = useState("");
   const [selectedAddressId, setSelectedAddressId] = useState("");
+  const [error, setError] = useState("");
+  const [storedCouponCode, setStoredCouponCode] = useState("");
+
+  const couponCodeApplyHandler = async () => {
+    setError("");
+
+    if (!couponCode.trim()) {
+      setError("Coupon code is required!");
+      return;
+    }
+
+    try {
+      const res = await axiosInstance.put("/order/verify-coupon", {
+        couponCode: couponCode.trim(),
+        cart
+      });
+
+      if (res.data.valid) {
+        setStoredCouponCode(couponCode.trim());
+        setDiscountAmount(parseFloat(res.data.discountAmount))
+        setDiscountPercent(res.data.discount);
+        setDiscountedProductId(res.data.discountedProductId);
+        setcouponCode("");
+      } else {
+        setDiscountAmount(0)
+        setDiscountPercent(0);
+        setDiscountedProductId("");
+        setError(res.data.message || "Coupon not valid for any items in cart.");
+      }
+    } catch (error: any) {
+      setDiscountAmount(0)
+      setDiscountPercent(0);
+      setDiscountedProductId("");
+      setError(error?.response?.data?.message);
+    }
+  }
 
   const createPaymentSession = async () => {
+    if (addresses.length === 0) {
+      toast.error("Please set your delivery address to create an order!");
+      return;
+    }
     setLoading(true);
     try {
       const res = await axiosInstance.post("/order/api/create-payment-session", {
         cart,
         selectedAddressId,
-        coupon: {},
-        
-      }, {withCredentials: true});
+        coupon: {
+          code: storedCouponCode,
+          discountAmount,
+          discountPercent,
+          discountedProductId,
+        },
+
+      }, { withCredentials: true });
 
       const sessionId = res.data.sessionId;
       router.push(`/checkout?sessionId=${sessionId}`);
@@ -209,12 +254,12 @@ const CartPage = () => {
                   />
                   <button
                     className='bg-blue-500 cursor-pointer text-white px-4 rounded-r-md hover:bg-blue-600 transition-all'
-                  // onClick={() => applycouponCode}
+                    onClick={() => couponCodeApplyHandler()}
                   >
                     Apply
                   </button>
-                  {/* {error  && (<p className='text-sm pt-2 text-red-500'>{error}</p>)} */}
                 </div>
+                {error && (<p className='text-sm pt-2 text-red-500'>{error}</p>)}
                 <hr className='my-4 text-slate-200' />
                 <div className="mb-4">
                   <h4 className='mb-[7px] font-medium text-[15px]'>Select Shipping Address</h4>
@@ -257,7 +302,7 @@ const CartPage = () => {
                 </div>
 
                 <button
-                onClick={createPaymentSession}
+                  onClick={createPaymentSession}
                   disabled={loading}
                   className='w-full flex items-center justify-center gap-2 cursor-pointer mt-4 py-3 bg-[#010f1c] text-white hover:bg-[#0989FF] transition-all rounded-lg'
                 >
