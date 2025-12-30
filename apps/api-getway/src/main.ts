@@ -16,7 +16,7 @@ import initializeSiteConfig from './libs/initializeSiteConfig';
 const app = express();
 app.use(
   cors({
-    origin: ["http://localhost:3000"],
+    origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002"],
     allowedHeaders: ["Authorization", "Content-Type"],
     credentials: true
   })
@@ -30,11 +30,11 @@ app.use(cookieParser());
 app.set("trust proxy", 1);
 
 const limiter = rateLimit({
-  windowMs: 15 * 6+0 * 1000,
+  windowMs: 15 * 6 + 0 * 1000,
   max: (req: any) => (req.user ? 1000 : 100),
-  message: { error: "Too many Requests, please try again later"},
+  message: { error: "Too many Requests, please try again later" },
   standardHeaders: true,
-  legacyHeaders: true,    
+  legacyHeaders: true,
   keyGenerator: (req: any) => req.ip,
 });
 
@@ -44,6 +44,7 @@ app.get('/getway-health', (req, res) => {
   res.send({ message: 'Welcome to api-getway!' });
 });
 
+app.use("/admin", proxy("http://localhost:6005"))
 app.use(
   "/order",
   proxy("http://localhost:6004", {

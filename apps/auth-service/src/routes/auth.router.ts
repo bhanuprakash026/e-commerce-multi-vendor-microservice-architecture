@@ -1,8 +1,8 @@
-import express, {Router} from "express";
-import { loginUser, userRegistration, verifyUser, userForgotPassword, resetUserPassword, verifyUserForgotPasswordOtp, refreshToken, getUser, registerSeller, createStripeConnectLink, loginSeller, getSeller, getUserAddresses, addUserAddress, deleteUserAddress } from "../controller/auth.controller";
+import express, { Router } from "express";
+import { loginUser, userRegistration, verifyUser, userForgotPassword, resetUserPassword, verifyUserForgotPasswordOtp, refreshToken, getUser, registerSeller, createStripeConnectLink, loginSeller, getSeller, getUserAddresses, addUserAddress, deleteUserAddress, updateUserPassword, loginAdmin, getAdmin } from "../controller/auth.controller";
 import isAuthenticated from "../../../../packages/middleware/isAuthenticated";
 import { createShop, verifySeller } from "../utils/auth.helper";
-import { isSeller } from "../../../../packages/middleware/authorizeRoles";
+import { isAdmin, isSeller } from "../../../../packages/middleware/authorizeRoles";
 
 const router: Router = express.Router();
 
@@ -14,6 +14,7 @@ router.get('/logged-in-user', isAuthenticated, getUser);
 router.post("/forgot-password-user", userForgotPassword);
 router.post("/reset-password-user", resetUserPassword);
 router.post("/verify-forgot-password-user", verifyUserForgotPasswordOtp);
+router.post("/change-password", isAuthenticated, updateUserPassword);
 
 router.post("/seller-registration", registerSeller);
 router.post("/verify-seller", verifySeller);
@@ -25,5 +26,7 @@ router.get('/logged-in-seller', isAuthenticated, isSeller, getSeller);
 router.get("/shipping-addresses", isAuthenticated, getUserAddresses);
 router.post("/add-address", isAuthenticated, addUserAddress);
 router.delete("/delete-address/:addressId", isAuthenticated, deleteUserAddress);
+router.post("/login-admin", loginAdmin);
+router.get('/logged-in-admin', isAuthenticated, isAdmin, getAdmin);
 
 export default router;

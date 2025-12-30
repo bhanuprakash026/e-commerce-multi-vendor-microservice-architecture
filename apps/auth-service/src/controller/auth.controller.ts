@@ -348,13 +348,13 @@ export const getSeller = async (req: Request, res: Response, next: NextFunction)
 export const addUserAddress = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const userId = req.user?.id;
-        const {label, name, street, city, zip, country, isDefault} = req.body;
+        const { label, name, street, city, zip, country, isDefault } = req.body;
 
-        if(!label || !name || !street || !city || !zip || !country) {
+        if (!label || !name || !street || !city || !zip || !country) {
             return next(new ValidationError("All fields are required"));
         }
 
-        if(isDefault) {
+        if (isDefault) {
             await prisma.address.updateMany({
                 where: {
                     userId,
@@ -383,43 +383,43 @@ export const addUserAddress = async (req: Request, res: Response, next: NextFunc
             address: newAddress
         });
     } catch (error) {
-        
+
     }
 }
 
 export const deleteUserAddress = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { addressId } = req.params;
-    const userId = req.user?.id;
+    try {
+        const { addressId } = req.params;
+        const userId = req.user?.id;
 
-    if(!addressId) {
-        return next(new ValidationError("Address ID is Required"));
-    }
-
-    const existingAddress = await prisma.address.findFirst({
-        where: {
-            id: addressId,
-            userId
+        if (!addressId) {
+            return next(new ValidationError("Address ID is Required"));
         }
-    });
 
-    if(!existingAddress) {
-        return next(new NotFoundError("Address not found or unauthorized"));
-    }
+        const existingAddress = await prisma.address.findFirst({
+            where: {
+                id: addressId,
+                userId
+            }
+        });
 
-    await prisma.address.delete({
-        where: {
-            id: addressId,
+        if (!existingAddress) {
+            return next(new NotFoundError("Address not found or unauthorized"));
         }
-    });
 
-    res.status(200).json({
-        success: true,
-        message: "Address Deleted Successfully"
-    })
-  } catch (error) {
-    next(error)
-  }
+        await prisma.address.delete({
+            where: {
+                id: addressId,
+            }
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "Address Deleted Successfully"
+        })
+    } catch (error) {
+        next(error)
+    }
 };
 
 export const getUserAddresses = async (req: Request, res: Response, next: NextFunction) => {
@@ -438,6 +438,108 @@ export const getUserAddresses = async (req: Request, res: Response, next: NextFu
         res.status(200).json({
             success: true,
             addresses
+        });
+    } catch (error) {
+        next(error)
+    }
+}
+
+export const updateUserPassword = async (req: any, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.user?.id;
+        const { currentPassword, newPassword, confirmPassword } = req.body;
+
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            return next(new ValidationError("All Fields are required"));
+        }
+
+        if (newPassword !== confirmPassword) {
+            return next(new ValidationError("new Password do not match"));
+        }
+
+        if (currentPassword === newPassword) {
+            return next(new ValidationError("New Password cannot be the same as the current password"))
+        }
+
+        const user = await prisma.users.findUnique({
+            where: {
+                id: userId
+            }
+        });
+
+        if (!user || !user.password) {
+            return next(new AuthError("User not found or password not found"));
+        }
+
+        const isPasswordCorrect = await bcrypt.compare(currentPassword, user.password);
+
+        if (!isPasswordCorrect) {
+            return next(new AuthError("Current password is incorrect"));
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 12)
+
+        await prisma.users.update({
+            where: { id: userId },
+            data: { password: hashedPassword }
+        });
+
+        res.status(200).json({ message: "Password updated successfully" })
+
+    } catch (error) {
+        next(error)
+    }
+}
+
+export const loginAdmin = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return next(new ValidationError("All Fields Required"));
+        };
+
+        const user = await prisma.users.findUnique({ where: { email } });
+
+        if (!user) {
+            return next(new AuthError("Admin not exist"));
+        };
+
+        const isMatch = await bcrypt.compare(password, user.password!);
+        if (!isMatch) return next(new AuthError("Invalid email or password"));
+
+        // sendLog({
+        //     type: "success",
+        //     message: `Admin login successfull: ${email}`,
+        //     source: "auth-service"
+        // });
+
+
+        res.clearCookie("seller-access-token");
+        res.clearCookie("seller-refresh-token");
+
+        const accessToken = jwt.sign({ id: user.id, role: "admin" }, process.env.ACCESS_TOKEN_SECRET as string, { expiresIn: "15m" });
+        const refreshToken = jwt.sign({ id: user.id, role: "admin" }, process.env.REFRESH_TOKEN_SECRET as string, { expiresIn: "7d" });
+
+        setCookie(res, "refresh_token", refreshToken);
+        setCookie(res, "access_token", accessToken);
+
+        res.status(200).json({
+            message: "Login successful",
+            user: { id: user.id, email: user.email, name: user.name },
+        })
+
+    } catch (error) {
+        next(error)
+    }
+};
+
+export const getAdmin = async (req: any, res: Response, next: NextFunction) => {
+    try {
+        const admin = req.admin;
+        res.status(201).json({
+            success: true,
+            admin
         });
     } catch (error) {
         next(error)

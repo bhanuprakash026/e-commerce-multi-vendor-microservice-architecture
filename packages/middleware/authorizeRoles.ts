@@ -17,6 +17,14 @@ export const isSeller = (req: Request, res: Response, next: NextFunction) => {
     next();
 };
 
+export const isAdmin = (req: any, res: Response, next: NextFunction) => {
+    if (req.role !== "admin") {
+        return next(new AuthError("Access denied. Admin only."));
+    }
+    req.admin = req.user;
+    next();
+};
+
 export const isUser = (req: Request, res: Response, next: NextFunction) => {
     if (req.role !== "user") {
         return next(new AuthError("Access denied. Seller only."));
